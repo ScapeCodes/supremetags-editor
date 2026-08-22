@@ -395,7 +395,7 @@ function renderPluginInfo() {
   $('sidebarStatusDot').classList.toggle('outdated', outdated);
   $('updateCallout').classList.toggle('outdated', outdated);
   $('updateCallout').innerHTML = outdated
-    ? `<span data-icon="info">${icons.info}</span><div><strong>Update available</strong><p>SupremeTags ${pluginInfo.latestVersion} is available on SpigotMC. Export safely, update the plugin, then reopen a fresh editor session.</p></div>`
+    ? `<span data-icon="info">${icons.info}</span><div><strong>Update available</strong><p>SupremeTags ${pluginInfo.latestVersion} is available on SpigotMC. Apply or discard your current session before updating the plugin.</p></div>`
     : `<span data-icon="check">${icons.check}</span><div><strong>Plugin is up to date</strong><p>The server-reported version matches the latest known Spigot release.</p></div>`;
 }
 
@@ -410,19 +410,18 @@ function compareVersions(current, latest) {
   return 0;
 }
 
-$('exportButton').addEventListener('click', async () => {
+$('applyChangesButton').addEventListener('click', async () => {
   renderPayload();
   if (!activeSession.id) {
-    showApplyModal('/tags editor apply-file editor-export.json', 'This page is not connected to a web session. Copy the JSON payload and use the offline apply-file workflow.');
+    showApplyModal('/tags editor web', 'This page is not connected to a web session. Create a new session from your server first.');
     return;
   }
 
   const saved = await saveSessionDraft();
   if (saved) {
-    showApplyModal(`/tags editor export ${activeSession.id}`, 'Run this command on your server to apply the saved editor changes.');
+    showApplyModal(`/tags editor apply ${activeSession.id}`, 'Run this command on your server to apply the saved editor changes.');
   } else {
-    navigator.clipboard?.writeText($('payloadOutput').value);
-    showApplyModal('/tags editor apply-file editor-export.json', 'The web session could not be saved or may have expired. The JSON payload was copied so you can use the offline apply-file workflow.');
+    showApplyModal('/tags editor web', 'The web session could not be saved or may have expired. Create a new session and try again.');
   }
 });
 
@@ -489,10 +488,9 @@ function generateCommands() {
     `/tags edit ${tag.identifier} cost ${tag.economy.amount}`,
     `/tags edit ${tag.identifier} withdrawable ${tag.withdrawable}`,
     '',
-    '# Full-fidelity edits use the web editor apply command:',
-    '/tags editor apply-session <sessionId> <applyToken>',
-    '# Or local JSON:',
-    '/tags editor apply-file editor-export.json'
+    '# Full editor sessions:',
+    '/tags editor web',
+    '/tags editor apply <id>'
   ];
 
   $('commandOutput').value = commands.join('\n');

@@ -20,11 +20,8 @@
       <div class="help-commands">
         <span>Start a web session</span>
         <code>/tags editor web</code>
-        <span>Apply your saved web edits</span>
-        <code>/tags editor apply-session &lt;sessionId&gt; &lt;applyToken&gt;</code>
-        <span>Offline fallback</span>
-        <code>/tags editor export</code>
-        <code>/tags editor apply-file editor-export.json</code>
+        <span>Apply your saved edits</span>
+        <code>/tags editor apply &lt;id&gt;</code>
       </div>
 
       <p class="small-note">If you already have a session link, check that it looks like <code>/#/session/&lt;id&gt;?api=...&amp;token=...</code> and that the session has not expired.</p>
@@ -92,7 +89,7 @@
             <span data-icon="upload"></span>
             Import
           </button>
-          <button class="primary-button" id="exportButton">
+          <button class="primary-button" id="applyChangesButton">
             <span data-icon="download"></span>
             Apply Changes
           </button>
@@ -201,7 +198,7 @@
         <div class="bulk-layout">
           <section>
             <h2>Bulk edit</h2>
-            <p>Apply controlled changes to matching tags before exporting an apply payload.</p>
+            <p>Apply controlled changes to matching tags before saving the session.</p>
             <div class="bulk-controls">
               <label>Match category<select id="bulkCategory"></select></label>
               <label>Set rarity<select id="bulkRarity"></select></label>
@@ -261,7 +258,7 @@
         <div class="session-layout">
           <h2>Session workflow</h2>
           <div class="steps">
-            <div><b>1</b><strong>Export</strong><span>Plugin uploads editable JSON to the session API.</span></div>
+            <div><b>1</b><strong>Create</strong><span>Plugin uploads editable JSON to the session API.</span></div>
             <div><b>2</b><strong>Edit</strong><span>This site updates the session draft in Cloudflare storage.</span></div>
             <div><b>3</b><strong>Apply</strong><span>Plugin fetches the draft, validates it, and saves locally.</span></div>
           </div>
@@ -321,7 +318,7 @@
         <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="applyModalTitle">
           <h2 id="applyModalTitle">Apply changes in-game</h2>
           <p id="applyModalText">Run this command on your server to apply the saved editor changes.</p>
-          <code id="applyCommand">/tags editor export &lt;id&gt;</code>
+          <code id="applyCommand">/tags editor apply &lt;id&gt;</code>
           <div class="modal-actions">
             <button class="secondary-button" id="copyApplyCommand"><span data-icon="copy"></span>Copy</button>
             <button class="primary-button" id="closeApplyModal">Done</button>
