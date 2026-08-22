@@ -603,6 +603,10 @@ async function loadSessionDraft() {
   try {
     const api = activeSession.apiUrl.replace(/\/$/, '');
     const response = await fetch(`${api}/sessions/${encodeURIComponent(activeSession.id)}?token=${encodeURIComponent(activeSession.token)}`);
+    if (response.status === 410) {
+      showInvalidSession('This editor session has already been applied or has expired. Create a new session with /tags editor web.');
+      return;
+    }
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const session = await response.json();
     applyPayload(session.payload);
@@ -627,6 +631,10 @@ async function saveSessionDraft() {
       },
       body: JSON.stringify({ payload })
     });
+    if (response.status === 410) {
+      showInvalidSession('This editor session has already been applied or has expired. Create a new session with /tags editor web.');
+      return false;
+    }
     if (!response.ok) throw new Error(await response.text());
     return true;
   } catch (error) {
