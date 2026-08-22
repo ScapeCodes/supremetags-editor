@@ -419,6 +419,7 @@ $('applyChangesButton').addEventListener('click', async () => {
 
   const saved = await saveSessionDraft();
   if (saved) {
+    lockEditorAfterApply();
     showApplyModal(`/tags editor apply ${activeSession.id}`, 'Run this command on your server to apply the saved editor changes.');
   } else {
     showApplyModal('/tags editor web', 'The web session could not be saved or may have expired. Create a new session and try again.');
@@ -681,6 +682,13 @@ function showApplyModal(command, message) {
   $('applyModalText').textContent = message;
   $('applyModal').classList.add('active');
   $('applyModal').setAttribute('aria-hidden', 'false');
+}
+
+function lockEditorAfterApply() {
+  document.querySelectorAll('.app-shell input, .app-shell select, .app-shell textarea, .app-shell button').forEach((control) => {
+    if (control.closest('#applyModal')) return;
+    control.disabled = true;
+  });
 }
 
 $('copyApplyCommand').addEventListener('click', () => navigator.clipboard?.writeText($('applyCommand').textContent));
