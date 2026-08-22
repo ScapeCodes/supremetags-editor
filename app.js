@@ -410,10 +410,20 @@ function compareVersions(current, latest) {
   return 0;
 }
 
-$('exportButton').addEventListener('click', () => {
+$('exportButton').addEventListener('click', async () => {
   renderPayload();
-  navigator.clipboard?.writeText($('payloadOutput').value);
-  saveSessionDraft();
+  if (!activeSession.id) {
+    showApplyModal('/tags editor apply-file editor-export.json', 'This page is not connected to a web session. Copy the JSON payload and use the offline apply-file workflow.');
+    return;
+  }
+
+  const saved = await saveSessionDraft();
+  if (saved) {
+    showApplyModal(`/tags editor export ${activeSession.id}`, 'Run this command on your server to apply the saved editor changes.');
+  } else {
+    navigator.clipboard?.writeText($('payloadOutput').value);
+    showApplyModal('/tags editor apply-file editor-export.json', 'The web session could not be saved or may have expired. The JSON payload was copied so you can use the offline apply-file workflow.');
+  }
 });
 
 $('importButton').addEventListener('click', () => {
@@ -605,7 +615,7 @@ async function loadSessionDraft() {
 
 async function saveSessionDraft() {
   if (!activeSession.id || !activeSession.token || !activeSession.apiUrl) {
-    return;
+    return false;
   }
 
   try {
@@ -620,8 +630,9 @@ async function saveSessionDraft() {
       body: JSON.stringify({ payload })
     });
     if (!response.ok) throw new Error(await response.text());
+    return true;
   } catch (error) {
-    alert(`Failed to save editor session: ${error.message}`);
+    return false;
   }
 }
 
@@ -658,6 +669,19 @@ function showInvalidSession(message) {
     if (note) note.textContent = message;
   }
 }
+
+function showApplyModal(command, message) {
+  $('applyCommand').textContent = command;
+  $('applyModalText').textContent = message;
+  $('applyModal').classList.add('active');
+  $('applyModal').setAttribute('aria-hidden', 'false');
+}
+
+$('copyApplyCommand').addEventListener('click', () => navigator.clipboard?.writeText($('applyCommand').textContent));
+$('closeApplyModal').addEventListener('click', () => {
+  $('applyModal').classList.remove('active');
+  $('applyModal').setAttribute('aria-hidden', 'true');
+});
 
 if (hasSessionLink) {
   render();

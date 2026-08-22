@@ -94,7 +94,7 @@
           </button>
           <button class="primary-button" id="exportButton">
             <span data-icon="download"></span>
-            Export Apply Payload
+            Apply Changes
           </button>
         </div>
       </header>
@@ -316,6 +316,18 @@
           </section>
         </div>
       </section>
+
+      <div class="modal-backdrop" id="applyModal" aria-hidden="true">
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="applyModalTitle">
+          <h2 id="applyModalTitle">Apply changes in-game</h2>
+          <p id="applyModalText">Run this command on your server to apply the saved editor changes.</p>
+          <code id="applyCommand">/tags editor export &lt;id&gt;</code>
+          <div class="modal-actions">
+            <button class="secondary-button" id="copyApplyCommand"><span data-icon="copy"></span>Copy</button>
+            <button class="primary-button" id="closeApplyModal">Done</button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 

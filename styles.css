@@ -867,6 +867,42 @@ code {
   font-size: 13px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  background: rgba(3, 6, 10, .72);
+}
+
+.modal-backdrop.active {
+  display: grid;
+}
+
+.modal-panel {
+  width: min(100%, 560px);
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.modal-panel code {
+  display: block;
+  margin: 16px 0;
+  padding: 13px;
+  overflow-x: auto;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 body.invalid-session-active {
   overflow: hidden;
 }
