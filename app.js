@@ -411,6 +411,7 @@ function compareVersions(current, latest) {
 }
 
 $('applyChangesButton').addEventListener('click', async () => {
+  syncSelectedFromForm();
   renderPayload();
   if (!activeSession.id) {
     showApplyModal('/tags editor web', 'This page is not connected to a web session. Create a new session from your server first.');
@@ -637,8 +638,15 @@ async function saveSessionDraft() {
       return false;
     }
     if (!response.ok) throw new Error(await response.text());
+    const verifyResponse = await fetch(`${api}/sessions/${encodeURIComponent(activeSession.id)}?token=${encodeURIComponent(activeSession.token)}`);
+    if (!verifyResponse.ok) throw new Error(`Could not verify saved session: HTTP ${verifyResponse.status}`);
+    const verified = await verifyResponse.json();
+    if (!samePayloadTags(payload, verified.payload)) {
+      throw new Error('Saved session verification failed. The latest browser changes did not reach the backend.');
+    }
     return true;
   } catch (error) {
+    console.error(error);
     return false;
   }
 }
@@ -667,6 +675,54 @@ function applyPayload(payload) {
 
   selectedId = tags[0]?.identifier;
   render();
+}
+
+function syncSelectedFromForm() {
+  const tag = selectedTag();
+  if (!tag || !document.getElementById('fieldIdentifier')) return;
+
+  const oldId = tag.identifier;
+  tag.identifier = slugify($('fieldIdentifier').value);
+  selectedId = tag.identifier;
+  tag.permission = $('fieldPermission').value;
+  tag.category = $('fieldCategory').value;
+  tag.rarity = $('fieldRarity').value;
+  tag.order = Number($('fieldOrder').value || 0);
+  tag.economy.amount = Number($('fieldCost').value || 0);
+  tag.withdrawable = $('fieldWithdrawable').checked;
+  tag.economy.enabled = $('fieldEconomyEnabled').checked;
+  tag.tag = $('fieldTagFrames').value.split('\n').filter(Boolean);
+  tag.description = $('fieldDescription').value.split('\n');
+  tag.displayName = $('fieldDisplayName').value;
+  tag.displayItem = $('fieldDisplayItem').value;
+  tag.customModelData = Number($('fieldModelData').value || 0);
+  tag.economy.type = $('fieldEconomyType').value;
+  tag.economy.takeCommand = $('fieldTakeCommand').value;
+  tag.economy.condition = $('fieldCondition').value;
+  tag.voucher.material = $('fieldVoucherMaterial').value;
+  tag.voucher.customModelData = Number($('fieldVoucherModelData').value || 0);
+  tag.voucher.displayName = $('fieldVoucherName').value;
+  tag.voucher.glow = $('fieldVoucherGlow').checked;
+  tag.voucher.lore = $('fieldVoucherLore').value.split('\n');
+  tag.requirements.enabled = $('fieldReqEnabled').checked;
+  tag.requirements.mode = $('fieldReqMode').value;
+  tag.requirements.persistUnlock = $('fieldReqPersist').checked;
+
+  if (oldId !== tag.identifier && tag.permission.endsWith(oldId)) {
+    tag.permission = `supremetags.tag.${tag.identifier}`;
+  }
+}
+
+function samePayloadTags(expected, actual) {
+  const expectedTags = expected?.data?.tags || [];
+  const actualTags = actual?.data?.tags || [];
+  if (expectedTags.length !== actualTags.length) {
+    return false;
+  }
+
+  const expectedIds = expectedTags.map((tag) => tag.identifier).sort().join('|');
+  const actualIds = actualTags.map((tag) => tag.identifier).sort().join('|');
+  return expectedIds === actualIds;
 }
 
 function showInvalidSession(message) {
