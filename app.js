@@ -252,10 +252,10 @@ function renderVariants(tag) {
   tag.variants.forEach((variant, index) => {
     const row = document.createElement('div');
     row.className = 'mini-row';
-    row.innerHTML = `<input value="${escapeAttr(variant.identifier)}" aria-label="Variant identifier"><input value="${escapeAttr(variant.tag)}" aria-label="Variant tag"><input value="${escapeAttr(variant.permission)}" aria-label="Variant permission"><button type="button">×</button>`;
+    row.innerHTML = `<input value="${escapeAttr(variant.identifier)}" aria-label="Variant identifier"><input value="${escapeAttr(firstVariantFrame(variant))}" aria-label="Variant tag"><input value="${escapeAttr(variant.permission)}" aria-label="Variant permission"><button type="button">×</button>`;
     const [identifier, text, permission] = row.querySelectorAll('input');
     identifier.addEventListener('input', () => updateSelected((target) => target.variants[index].identifier = slugify(identifier.value)));
-    text.addEventListener('input', () => updateSelected((target) => target.variants[index].tag = text.value));
+    text.addEventListener('input', () => updateSelected((target) => target.variants[index].tag = [text.value]));
     permission.addEventListener('input', () => updateSelected((target) => target.variants[index].permission = permission.value));
     row.querySelector('button').addEventListener('click', () => updateSelected((target) => target.variants.splice(index, 1)));
     $('variantTable').appendChild(row);
@@ -281,7 +281,7 @@ function renderRequirements(tag) {
   });
 }
 
-$('addVariantButton').addEventListener('click', () => updateSelected((tag) => tag.variants.push({ identifier: `${tag.identifier}_variant`, tag: tag.tag[0], permission: `${tag.permission}.variant` })));
+$('addVariantButton').addEventListener('click', () => updateSelected((tag) => tag.variants.push({ identifier: `${tag.identifier}_variant`, tag: [tag.tag[0]], permission: `${tag.permission}.variant` })));
 $('addRequirementButton').addEventListener('click', () => updateSelected((tag) => tag.requirements.list.push({ name: 'new-rule', type: 'permission', value: tag.permission })));
 
 document.querySelectorAll('.nav-item').forEach((button) => {
@@ -581,6 +581,13 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replace(/"/g, '&quot;');
+}
+
+function firstVariantFrame(variant) {
+  if (Array.isArray(variant.tag)) {
+    return variant.tag[0] || '';
+  }
+  return variant.tag || '';
 }
 
 function parseSessionRoute() {
