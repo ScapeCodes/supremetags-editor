@@ -12,8 +12,9 @@ const icons = {
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>',
   wand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m15 4 5 5L8 21l-5-5L15 4Z"/><path d="m14 5 5 5"/><path d="M5 4v3M3.5 5.5h3M20 16v3M18.5 17.5h3"/></svg>',
   sparkles: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg>',
-  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
-  ,
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>',
+  reverse: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h11a4 4 0 0 1 0 8H7"/><path d="m7 11-4 4 4 4"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg>'
 };
 
@@ -103,6 +104,78 @@ const pluginInfo = {
 const $ = (id) => document.getElementById(id);
 const selectedTag = () => tags.find((tag) => tag.identifier === selectedId) || tags[0];
 
+function normalizeTag(tag) {
+  tag.tag = Array.isArray(tag.tag) && tag.tag.length ? tag.tag : [''];
+  tag.permission = tag.permission || 'none';
+  tag.groups = Array.isArray(tag.groups) ? tag.groups : [];
+  tag.description = Array.isArray(tag.description) ? tag.description : [];
+  tag.category = tag.category || categories[0] || 'default';
+  tag.order = Number(tag.order || 0);
+  tag.withdrawable = Boolean(tag.withdrawable);
+  tag.rarity = tag.rarity || rarities[0] || 'common';
+  tag.displayName = tag.displayName || '&7Tag: %tag%';
+  tag.displayItem = tag.displayItem || 'NAME_TAG';
+  tag.customModelData = Number(tag.customModelData || 0);
+  tag.effects = Array.isArray(tag.effects) ? tag.effects : [];
+  tag.abilities = Array.isArray(tag.abilities) ? tag.abilities : [];
+  tag.customPlaceholders = tag.customPlaceholders && typeof tag.customPlaceholders === 'object' ? tag.customPlaceholders : {};
+  tag.economy = {
+    enabled: Boolean(tag.economy?.enabled),
+    type: tag.economy?.type || 'VAULT',
+    amount: Number(tag.economy?.amount || 0),
+    takeCommand: tag.economy?.takeCommand || '',
+    condition: tag.economy?.condition || ''
+  };
+  tag.voucher = {
+    material: tag.voucher?.material || 'NAME_TAG',
+    displayName: tag.voucher?.displayName || '%tag% &f&lVoucher',
+    lore: Array.isArray(tag.voucher?.lore) ? tag.voucher.lore : ['&7&m-----------------------------', '&eClick to equip!', '&7&m-----------------------------'],
+    customModelData: Number(tag.voucher?.customModelData || 0),
+    glow: tag.voucher?.glow !== false
+  };
+  tag.variants = Array.isArray(tag.variants) ? tag.variants.map(normalizeVariant) : [];
+  tag.requirements = {
+    enabled: Boolean(tag.requirements?.enabled),
+    persistUnlock: Boolean(tag.requirements?.persistUnlock),
+    mode: tag.requirements?.mode || 'all',
+    list: Array.isArray(tag.requirements?.list) ? tag.requirements.list.map(normalizeRequirement) : []
+  };
+  return tag;
+}
+
+function normalizeVariant(variant) {
+  return {
+    identifier: variant.identifier || 'variant',
+    tag: Array.isArray(variant.tag) ? variant.tag : [variant.tag || ''],
+    permission: variant.permission || 'none',
+    description: Array.isArray(variant.description) ? variant.description : [],
+    rarity: variant.rarity || '',
+    unlockedMaterial: variant.unlockedMaterial || 'NAME_TAG',
+    unlockedDisplayName: variant.unlockedDisplayName || '&7Variant: %tag%',
+    unlockedCustomModelData: Number(variant.unlockedCustomModelData || 0),
+    lockedMaterial: variant.lockedMaterial || 'BARRIER',
+    lockedDisplayName: variant.lockedDisplayName || '&cLocked Variant: %tag%',
+    lockedCustomModelData: Number(variant.lockedCustomModelData || 0)
+  };
+}
+
+function normalizeRequirement(rule) {
+  return {
+    name: rule.name || 'new-rule',
+    type: rule.type || 'placeholder',
+    permission: rule.permission || '',
+    placeholder: rule.placeholder || '',
+    operator: rule.operator || '>=',
+    value: rule.value || '',
+    tag: rule.tag || '',
+    economyType: rule.economyType || 'VAULT',
+    amount: Number(rule.amount || 0),
+    display: rule.display || '',
+    loreDisplay: rule.loreDisplay || '',
+    message: rule.message || ''
+  };
+}
+
 function pushHistory() {
   history.push(JSON.stringify(tags));
   if (history.length > 40) history.shift();
@@ -119,19 +192,20 @@ function fillSelect(select, values, allLabel) {
 }
 
 function render() {
+  tags = tags.map(normalizeTag);
   fillSelect($('categoryFilter'), categories, 'All categories');
   fillSelect($('rarityFilter'), rarities, 'All rarities');
   fillSelect($('fieldCategory'), categories);
   fillSelect($('fieldRarity'), rarities);
-  fillSelect($('bulkCategory'), categories, 'Choose category');
-  fillSelect($('bulkRarity'), rarities, 'Keep rarity');
+  fillSelect($('bulkMatchCategory'), categories, 'Any category');
+  fillSelect($('bulkMatchRarity'), rarities, 'Any rarity');
+  fillSelect($('bulkSetCategory'), categories, 'Keep category');
+  fillSelect($('bulkSetRarity'), rarities, 'Keep rarity');
   renderTagList();
   renderDetails();
   renderBulkMatches();
   renderPayload();
   renderPluginInfo();
-  renderCommandTargets();
-  generateCommands();
   generateColor();
 }
 
@@ -142,7 +216,7 @@ function renderTagList() {
   const visible = tags
     .filter((tag) => !category || tag.category === category)
     .filter((tag) => !rarity || tag.rarity === rarity)
-    .filter((tag) => !query || [tag.identifier, tag.permission, tag.category, tag.rarity, tag.tag.join(' ')].join(' ').toLowerCase().includes(query))
+    .filter((tag) => !query || [tag.identifier, tag.permission, tag.category, tag.rarity, tag.tag.join(' '), tag.groups.join(' '), tag.effects.join(' '), tag.abilities.join(' '), Object.values(tag.customPlaceholders).join(' ')].join(' ').toLowerCase().includes(query))
     .sort((a, b) => a.order - b.order);
 
   $('tagCount').textContent = tags.length;
@@ -180,6 +254,10 @@ function renderDetails() {
   $('fieldEconomyEnabled').checked = tag.economy.enabled;
   $('fieldTagFrames').value = tag.tag.join('\n');
   $('fieldDescription').value = tag.description.join('\n');
+  $('fieldGroups').value = tag.groups.join('\n');
+  $('fieldEffects').value = tag.effects.join('\n');
+  $('fieldAbilities').value = tag.abilities.join('\n');
+  $('fieldCustomPlaceholders').value = keyValueLines(tag.customPlaceholders);
   $('fieldDisplayName').value = tag.displayName;
   $('fieldDisplayItem').value = tag.displayItem;
   $('fieldModelData').value = tag.customModelData;
@@ -209,6 +287,16 @@ function updateSelected(mutator) {
   renderPayload();
 }
 
+function updateSelectedInline(mutator) {
+  const tag = selectedTag();
+  if (!tag) return;
+  pushHistory();
+  mutator(tag);
+  renderTagList();
+  renderBulkMatches();
+  renderPayload();
+}
+
 function bindField(id, mutator, eventName = 'input') {
   $(id).addEventListener(eventName, (event) => updateSelected((tag) => mutator(tag, event.target)));
 }
@@ -228,6 +316,10 @@ bindField('fieldWithdrawable', (tag, input) => tag.withdrawable = input.checked,
 bindField('fieldEconomyEnabled', (tag, input) => tag.economy.enabled = input.checked, 'change');
 bindField('fieldTagFrames', (tag, input) => tag.tag = input.value.split('\n').filter(Boolean));
 bindField('fieldDescription', (tag, input) => tag.description = input.value.split('\n'));
+bindField('fieldGroups', (tag, input) => tag.groups = lines(input.value));
+bindField('fieldEffects', (tag, input) => tag.effects = lines(input.value));
+bindField('fieldAbilities', (tag, input) => tag.abilities = lines(input.value));
+bindField('fieldCustomPlaceholders', (tag, input) => tag.customPlaceholders = parseKeyValueLines(input.value));
 bindField('fieldDisplayName', (tag, input) => tag.displayName = input.value);
 bindField('fieldDisplayItem', (tag, input) => tag.displayItem = input.value);
 bindField('fieldModelData', (tag, input) => tag.customModelData = Number(input.value || 0));
@@ -251,13 +343,38 @@ function renderVariants(tag) {
   }
   tag.variants.forEach((variant, index) => {
     const row = document.createElement('div');
-    row.className = 'mini-row';
-    row.innerHTML = `<input value="${escapeAttr(variant.identifier)}" aria-label="Variant identifier"><input value="${escapeAttr(firstVariantFrame(variant))}" aria-label="Variant tag"><input value="${escapeAttr(variant.permission)}" aria-label="Variant permission"><button type="button">×</button>`;
-    const [identifier, text, permission] = row.querySelectorAll('input');
-    identifier.addEventListener('input', () => updateSelected((target) => target.variants[index].identifier = slugify(identifier.value)));
-    text.addEventListener('input', () => updateSelected((target) => target.variants[index].tag = [text.value]));
-    permission.addEventListener('input', () => updateSelected((target) => target.variants[index].permission = permission.value));
-    row.querySelector('button').addEventListener('click', () => updateSelected((target) => target.variants.splice(index, 1)));
+    row.className = 'mini-card variant-card';
+    row.innerHTML = `
+      <div class="mini-card-head">
+        <strong>${escapeHtml(variant.identifier)}</strong>
+        <button type="button" class="danger-button" data-action="remove">×</button>
+      </div>
+      <div class="mini-card-grid">
+        <label>Identifier<input data-field="identifier" value="${escapeAttr(variant.identifier)}"></label>
+        <label>Permission<input data-field="permission" value="${escapeAttr(variant.permission)}"></label>
+        <label>Rarity<select data-field="rarity"><option value="">Use tag rarity</option>${rarities.map((rarity) => `<option value="${escapeAttr(rarity)}">${escapeHtml(rarity)}</option>`).join('')}</select></label>
+        <label class="full-span">Frames<textarea data-field="tag" rows="3">${escapeHtml(asLines(variant.tag))}</textarea></label>
+        <label class="full-span">Description<textarea data-field="description" rows="2">${escapeHtml(asLines(variant.description))}</textarea></label>
+        <label>Unlocked material<input data-field="unlockedMaterial" value="${escapeAttr(variant.unlockedMaterial)}"></label>
+        <label>Unlocked name<input data-field="unlockedDisplayName" value="${escapeAttr(variant.unlockedDisplayName)}"></label>
+        <label>Unlocked model data<input data-field="unlockedCustomModelData" type="number" min="0" value="${escapeAttr(variant.unlockedCustomModelData)}"></label>
+        <label>Locked material<input data-field="lockedMaterial" value="${escapeAttr(variant.lockedMaterial)}"></label>
+        <label>Locked name<input data-field="lockedDisplayName" value="${escapeAttr(variant.lockedDisplayName)}"></label>
+        <label>Locked model data<input data-field="lockedCustomModelData" type="number" min="0" value="${escapeAttr(variant.lockedCustomModelData)}"></label>
+      </div>
+    `;
+    row.querySelector('[data-field="rarity"]').value = variant.rarity || '';
+    row.querySelectorAll('[data-field]').forEach((control) => {
+      control.addEventListener('input', () => updateSelectedInline((target) => {
+        const field = control.dataset.field;
+        if (field === 'identifier') target.variants[index].identifier = slugify(control.value);
+        else if (field === 'tag') target.variants[index].tag = lines(control.value);
+        else if (field === 'description') target.variants[index].description = control.value.split('\n');
+        else if (field.endsWith('CustomModelData')) target.variants[index][field] = Number(control.value || 0);
+        else target.variants[index][field] = control.value;
+      }));
+    });
+    row.querySelector('[data-action="remove"]').addEventListener('click', () => updateSelected((target) => target.variants.splice(index, 1)));
     $('variantTable').appendChild(row);
   });
 }
@@ -270,19 +387,58 @@ function renderRequirements(tag) {
   }
   tag.requirements.list.forEach((rule, index) => {
     const row = document.createElement('div');
-    row.className = 'mini-row';
-    row.innerHTML = `<input value="${escapeAttr(rule.name)}" aria-label="Requirement name"><input value="${escapeAttr(rule.type)}" aria-label="Requirement type"><input value="${escapeAttr(rule.value)}" aria-label="Requirement value"><button type="button">×</button>`;
-    const [name, type, value] = row.querySelectorAll('input');
-    name.addEventListener('input', () => updateSelected((target) => target.requirements.list[index].name = slugify(name.value)));
-    type.addEventListener('input', () => updateSelected((target) => target.requirements.list[index].type = type.value));
-    value.addEventListener('input', () => updateSelected((target) => target.requirements.list[index].value = value.value));
-    row.querySelector('button').addEventListener('click', () => updateSelected((target) => target.requirements.list.splice(index, 1)));
+    row.className = 'mini-card requirement-card';
+    row.innerHTML = `
+      <div class="mini-card-head">
+        <strong>${escapeHtml(rule.name)}</strong>
+        <button type="button" class="danger-button" data-action="remove">×</button>
+      </div>
+      <div class="mini-card-grid">
+        <label>Name<input data-field="name" value="${escapeAttr(rule.name)}"></label>
+        <label>Type<select data-field="type">
+          ${['placeholder', 'permission', 'tag', 'economy'].map((type) => `<option value="${type}">${type}</option>`).join('')}
+        </select></label>
+        <label>Operator<select data-field="operator">
+          ${['>=', '<=', '>', '<', '==', '!=', 'contains', 'starts-with', 'ends-with'].map((operator) => `<option value="${escapeAttr(operator)}">${escapeHtml(operator)}</option>`).join('')}
+        </select></label>
+        <label>Permission<input data-field="permission" value="${escapeAttr(rule.permission)}"></label>
+        <label>Placeholder<input data-field="placeholder" value="${escapeAttr(rule.placeholder)}" placeholder="%statistic_time_played%"></label>
+        <label>Value<input data-field="value" value="${escapeAttr(rule.value)}"></label>
+        <label>Required tag<input data-field="tag" value="${escapeAttr(rule.tag)}"></label>
+        <label>Economy type<input data-field="economyType" value="${escapeAttr(rule.economyType)}"></label>
+        <label>Amount<input data-field="amount" type="number" min="0" step="0.01" value="${escapeAttr(rule.amount)}"></label>
+        <label class="full-span">Menu display<input data-field="display" value="${escapeAttr(rule.display)}"></label>
+        <label class="full-span">Lore display<input data-field="loreDisplay" value="${escapeAttr(rule.loreDisplay)}"></label>
+        <label class="full-span">Failure message<input data-field="message" value="${escapeAttr(rule.message)}"></label>
+      </div>
+    `;
+    row.querySelector('[data-field="type"]').value = rule.type || 'placeholder';
+    row.querySelector('[data-field="operator"]').value = rule.operator || '>=';
+    row.querySelectorAll('[data-field]').forEach((control) => {
+      control.addEventListener('input', () => updateSelectedInline((target) => {
+        const field = control.dataset.field;
+        if (field === 'name') target.requirements.list[index].name = slugify(control.value);
+        else if (field === 'amount') target.requirements.list[index].amount = Number(control.value || 0);
+        else target.requirements.list[index][field] = control.value;
+      }));
+    });
+    row.querySelector('[data-action="remove"]').addEventListener('click', () => updateSelected((target) => target.requirements.list.splice(index, 1)));
     $('requirementTable').appendChild(row);
   });
 }
 
-$('addVariantButton').addEventListener('click', () => updateSelected((tag) => tag.variants.push({ identifier: `${tag.identifier}_variant`, tag: [tag.tag[0]], permission: `${tag.permission}.variant` })));
-$('addRequirementButton').addEventListener('click', () => updateSelected((tag) => tag.requirements.list.push({ name: 'new-rule', type: 'permission', value: tag.permission })));
+$('addVariantButton').addEventListener('click', () => updateSelected((tag) => tag.variants.push(normalizeVariant({
+  identifier: `${tag.identifier}_variant`,
+  tag: [tag.tag[0]],
+  permission: `${tag.permission}.variant`,
+  rarity: tag.rarity
+}))));
+$('addRequirementButton').addEventListener('click', () => updateSelected((tag) => tag.requirements.list.push(normalizeRequirement({
+  name: 'new-rule',
+  type: 'permission',
+  permission: tag.permission,
+  display: '&f- &7Required permission'
+}))));
 
 document.querySelectorAll('.nav-item').forEach((button) => {
   button.addEventListener('click', () => {
@@ -310,6 +466,7 @@ $('newTagButton').addEventListener('click', () => {
     identifier: next,
     tag: ['&7[New Tag]'],
     permission: `supremetags.tag.${next}`,
+    groups: [],
     category: 'default',
     rarity: 'common',
     order: tags.length + 1,
@@ -318,6 +475,9 @@ $('newTagButton').addEventListener('click', () => {
     displayName: '&7Tag: %tag%',
     displayItem: 'NAME_TAG',
     customModelData: 0,
+    effects: [],
+    abilities: [],
+    customPlaceholders: {},
     economy: { enabled: false, type: 'VAULT', amount: 0, takeCommand: '', condition: '' },
     voucher: { material: 'NAME_TAG', displayName: '%tag% &f&lVoucher', customModelData: 0, glow: true, lore: ['&7&m-----------------------------', '&eClick to equip!', '&7&m-----------------------------'] },
     variants: [],
@@ -336,27 +496,70 @@ $('undoButton').addEventListener('click', () => {
 });
 
 $('applyBulkButton').addEventListener('click', () => {
-  const category = $('bulkCategory').value;
-  if (!category) return;
+  const matches = getBulkMatches();
+  if (!matches.length) return;
   pushHistory();
-  tags.forEach((tag) => {
-    if (tag.category !== category) return;
-    if ($('bulkRarity').value) tag.rarity = $('bulkRarity').value;
-    if ($('bulkPermission').value.trim()) tag.permission = `${$('bulkPermission').value.trim()}${tag.identifier}`;
+  const setCategory = $('bulkSetCategory').value;
+  const setRarity = $('bulkSetRarity').value;
+  const permissionPrefix = $('bulkPermission').value.trim();
+  const addGroup = $('bulkAddGroup').value.trim();
+  const removeGroup = $('bulkRemoveGroup').value.trim();
+  const setCost = $('bulkSetCost').value;
+  const economyState = $('bulkEconomyState').value;
+
+  matches.forEach((tag) => {
+    if (setCategory) tag.category = setCategory;
+    if (setRarity) tag.rarity = setRarity;
+    if (permissionPrefix) tag.permission = `${permissionPrefix}${tag.identifier}`;
+    if (addGroup && !tag.groups.includes(addGroup)) tag.groups.push(addGroup);
+    if (removeGroup) tag.groups = tag.groups.filter((group) => group !== removeGroup);
+    if (setCost !== '') tag.economy.amount = Number(setCost || 0);
+    if (economyState !== '') tag.economy.enabled = economyState === 'true';
   });
   render();
 });
 
-['bulkCategory', 'bulkRarity', 'bulkPermission'].forEach((id) => $(id).addEventListener('input', renderBulkMatches));
+$('toggleBulkButton').addEventListener('click', () => $('bulkPanel').classList.toggle('active'));
+$('closeBulkButton').addEventListener('click', () => $('bulkPanel').classList.remove('active'));
+['bulkMatchCategory', 'bulkMatchRarity', 'bulkMatchText', 'bulkSetCategory', 'bulkSetRarity', 'bulkPermission', 'bulkAddGroup', 'bulkRemoveGroup', 'bulkSetCost', 'bulkEconomyState']
+  .forEach((id) => $(id).addEventListener('input', renderBulkMatches));
+
+function getBulkMatches() {
+  const category = $('bulkMatchCategory').value;
+  const rarity = $('bulkMatchRarity').value;
+  const query = $('bulkMatchText').value.trim().toLowerCase();
+  return tags.filter((tag) => {
+    if (category && tag.category !== category) return false;
+    if (rarity && tag.rarity !== rarity) return false;
+    if (!query) return true;
+    return [
+      tag.identifier,
+      tag.permission,
+      tag.category,
+      tag.rarity,
+      tag.tag.join(' '),
+      tag.description.join(' '),
+      tag.groups.join(' '),
+      tag.abilities.join(' '),
+      Object.entries(tag.customPlaceholders).map(([key, value]) => `${key} ${value}`).join(' ')
+    ].join(' ').toLowerCase().includes(query);
+  });
+}
 
 function renderBulkMatches() {
-  const category = $('bulkCategory').value;
-  const matches = category ? tags.filter((tag) => tag.category === category) : [];
-  $('bulkMatches').innerHTML = matches.length ? matches.map((tag) => `<span>${tag.identifier}</span>`).join('') : '<p>Choose a category to preview matches.</p>';
+  const matches = getBulkMatches();
+  $('bulkSummary').textContent = matches.length === 1 ? '1 tag matched' : `${matches.length} tags matched`;
+  $('bulkMatches').innerHTML = matches.length
+    ? matches.slice(0, 24).map((tag) => `<span>${escapeHtml(tag.identifier)}</span>`).join('') + (matches.length > 24 ? `<span>+${matches.length - 24} more</span>` : '')
+    : '<p>No tags match the current filters.</p>';
 }
 
 function renderPayload() {
-  const payload = {
+  currentPayload();
+}
+
+function currentPayload() {
+  return {
     schemaVersion: 1,
     editor: 'supremetags-web',
     exportedAt: new Date().toISOString(),
@@ -375,7 +578,6 @@ function renderPayload() {
       tags
     }
   };
-  $('payloadOutput').value = JSON.stringify(payload, null, 2);
 }
 
 function renderPluginInfo() {
@@ -412,7 +614,6 @@ function compareVersions(current, latest) {
 
 $('applyChangesButton').addEventListener('click', async () => {
   syncSelectedFromForm();
-  renderPayload();
   if (!activeSession.id) {
     showApplyModal('/tags editor web', 'This page is not connected to a web session. Create a new session from your server first.');
     return;
@@ -438,64 +639,150 @@ $('importButton').addEventListener('click', () => {
   }
 });
 
-['colorText', 'colorStart', 'colorEnd', 'colorFormat'].forEach((id) => $(id).addEventListener('input', generateColor));
-$('generateColorButton').addEventListener('click', generateColor);
+['colorText', 'colorStart', 'colorEnd', 'colorFormat', 'colorStep', 'colorTrimSpaces', 'colorWrapper'].forEach((id) => $(id).addEventListener('input', generateColor));
+document.querySelectorAll('[data-format-code]').forEach((button) => button.addEventListener('click', () => insertAtCursor($('colorText'), button.dataset.formatCode)));
+$('swapColorsButton').addEventListener('click', () => {
+  const start = $('colorStart').value;
+  $('colorStart').value = $('colorEnd').value;
+  $('colorEnd').value = start;
+  generateColor();
+});
+$('reverseTextButton').addEventListener('click', () => {
+  $('colorText').value = reverseVisibleText($('colorText').value);
+  generateColor();
+});
+$('applyColorToTagButton').addEventListener('click', () => {
+  const output = $('colorOutput').value;
+  if (!output) return;
+  updateSelected((tag) => tag.tag = [output]);
+});
 $('copyColorButton').addEventListener('click', () => navigator.clipboard?.writeText($('colorOutput').value));
-$('generateCommandsButton').addEventListener('click', generateCommands);
-$('copyCommandsButton').addEventListener('click', () => navigator.clipboard?.writeText($('commandOutput').value));
-$('commandTarget').addEventListener('change', generateCommands);
 
 function generateColor() {
-  const text = $('colorText').value || '';
+  const rawText = $('colorText').value || '';
   const start = $('colorStart').value;
   const end = $('colorEnd').value;
   const format = $('colorFormat').value;
-  const colors = gradient(start, end, text.length || 1);
-  let output = '';
+  const step = Math.max(1, Number($('colorStep').value || 1));
+  const trimSpaces = $('colorTrimSpaces').checked;
+  const wrapper = $('colorWrapper').value;
+  const tokens = tokenizeMinecraftText(rawText);
+  const colorable = tokens.filter((token) => token.type === 'char' && (!trimSpaces || !/\s/.test(token.value)));
+  const colors = gradient(start, end, Math.max(1, Math.ceil(colorable.length / step)));
+  let colorIndex = 0;
+  let charsInColor = 0;
+  let generated = '';
+
   if (format === 'minimessage') {
-    output = `<gradient:${start}:${end}>${text}</gradient>`;
-  } else if (format === 'classic') {
-    output = [...text].map((char, index) => `${nearestLegacy(colors[index])}${char}`).join('');
+    generated = `<gradient:${start}:${end}>${escapeMiniMessage(stripMinecraftCodes(rawText))}</gradient>`;
   } else {
-    output = [...text].map((char, index) => `&#${colors[index].slice(1)}${char}`).join('');
+    tokens.forEach((token) => {
+      if (token.type === 'format') {
+        generated += token.value;
+        return;
+      }
+      if (trimSpaces && /\s/.test(token.value)) {
+        generated += token.value;
+        return;
+      }
+      const color = colors[Math.min(colorIndex, colors.length - 1)];
+      generated += `${formatColorPrefix(color, format)}${token.value}`;
+      charsInColor++;
+      if (charsInColor >= step) {
+        charsInColor = 0;
+        colorIndex++;
+      }
+    });
   }
+
+  const output = wrapper ? wrapper.replace('$t', generated) : generated;
   $('colorOutput').value = output;
-  $('colorPreview').innerHTML = [...text].map((char, index) => `<span style="color:${colors[index]}">${escapeHtml(char)}</span>`).join('');
+  $('typedColorPreview').innerHTML = minecraftToHtml(rawText);
+  $('colorPreview').innerHTML = minecraftToHtml(generated);
 }
 
-function renderCommandTargets() {
-  const current = $('commandTarget').value || selectedId;
-  $('commandTarget').innerHTML = tags
-    .sort((a, b) => a.order - b.order)
-    .map((tag) => `<option value="${escapeAttr(tag.identifier)}">${escapeHtml(tag.identifier)}</option>`)
-    .join('');
-  $('commandTarget').value = tags.some((tag) => tag.identifier === current) ? current : selectedId;
-}
-
-function generateCommands() {
-  const targetId = $('commandTarget')?.value || selectedId;
-  const tag = tags.find((entry) => entry.identifier === targetId) || selectedTag();
-  if (!tag) {
-    $('commandOutput').value = '';
-    return;
+function tokenizeMinecraftText(input) {
+  const chars = [...input];
+  const tokens = [];
+  for (let i = 0; i < chars.length; i++) {
+    const code = readMinecraftCode(chars, i);
+    if (code) {
+      const isFormat = /[&§][klmnorKLMNOR]/.test(code.raw);
+      if (isFormat) tokens.push({ type: 'format', value: normalizeCodePrefix(code.raw) });
+      i += code.length - 1;
+      continue;
+    }
+    tokens.push({ type: 'char', value: chars[i] });
   }
+  return tokens;
+}
 
-  const firstFrame = tag.tag[0] || '';
-  const commands = [
-    `/tags create ${tag.identifier} ${firstFrame}`,
-    `/tags edit ${tag.identifier} tag ${firstFrame}`,
-    `/tags edit ${tag.identifier} permission ${tag.permission}`,
-    `/tags edit ${tag.identifier} category ${tag.category}`,
-    `/tags edit ${tag.identifier} rarity ${tag.rarity}`,
-    `/tags edit ${tag.identifier} cost ${tag.economy.amount}`,
-    `/tags edit ${tag.identifier} withdrawable ${tag.withdrawable}`,
-    '',
-    '# Full editor sessions:',
-    '/tags editor web',
-    '/tags editor apply <id>'
-  ];
+function readMinecraftCode(chars, index) {
+  const current = chars[index];
+  const next = chars[index + 1];
+  if ((current === '&' || current === '§') && next === '#') {
+    const hex = chars.slice(index + 2, index + 8).join('');
+    if (/^[0-9a-fA-F]{6}$/.test(hex)) return { raw: `${current}#${hex}`, length: 8 };
+  }
+  if ((current === '&' || current === '§') && next && /[0-9a-fk-orA-FK-OR]/.test(next)) {
+    return { raw: `${current}${next}`, length: 2 };
+  }
+  if ((current === '&' || current === '§') && next?.toLowerCase() === 'x') {
+    const sequence = chars.slice(index, index + 14).join('');
+    const pattern = current === '&'
+      ? /^&x(&[0-9a-fA-F]){6}$/
+      : /^§x(§[0-9a-fA-F]){6}$/;
+    if (pattern.test(sequence)) return { raw: sequence, length: 14 };
+  }
+  if (current === '<' && next === '#') {
+    const hex = chars.slice(index + 2, index + 8).join('');
+    if (/^[0-9a-fA-F]{6}$/.test(hex) && chars[index + 8] === '>') return { raw: `<#${hex}>`, length: 9 };
+  }
+  return null;
+}
 
-  $('commandOutput').value = commands.join('\n');
+function normalizeCodePrefix(code) {
+  return code.startsWith('§') ? `&${code.slice(1)}` : code;
+}
+
+function formatColorPrefix(hex, format) {
+  const clean = hex.slice(1);
+  if (format === 'classic') return nearestLegacy(hex);
+  if (format === 'ampx') return `&x${[...clean].map((char) => `&${char}`).join('')}`;
+  if (format === 'sectionx') return `§x${[...clean].map((char) => `§${char}`).join('')}`;
+  if (format === 'minimessage-single') return `<#${clean}>`;
+  return `&#${clean}`;
+}
+
+function stripMinecraftCodes(input) {
+  const chars = [...input];
+  let output = '';
+  for (let i = 0; i < chars.length; i++) {
+    const code = readMinecraftCode(chars, i);
+    if (code) {
+      i += code.length - 1;
+      continue;
+    }
+    output += chars[i];
+  }
+  return output;
+}
+
+function escapeMiniMessage(value) {
+  return String(value).replace(/[\\<>]/g, (char) => `\\${char}`);
+}
+
+function insertAtCursor(input, value) {
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = `${input.value.slice(0, start)}${value}${input.value.slice(end)}`;
+  input.focus();
+  input.setSelectionRange(start + value.length, start + value.length);
+  generateColor();
+}
+
+function reverseVisibleText(input) {
+  return stripMinecraftCodes(input).split('').reverse().join('');
 }
 
 function gradient(start, end, steps) {
@@ -514,26 +801,56 @@ function gradient(start, end, steps) {
 function minecraftToHtml(input) {
   let html = '';
   let color = '#eef4f8';
+  const styles = new Set();
   const chars = [...(input || '')];
   for (let i = 0; i < chars.length; i++) {
-    if (chars[i] === '&' && chars[i + 1] === '#') {
-      const hex = chars.slice(i + 2, i + 8).join('');
-      if (/^[0-9a-fA-F]{6}$/.test(hex)) {
-        color = `#${hex}`;
-        i += 7;
+    const code = readMinecraftCode(chars, i);
+    if (code) {
+      const raw = code.raw;
+      const lower = raw.toLowerCase();
+      if (lower.startsWith('&#') || lower.startsWith('§#')) {
+        color = `#${raw.slice(2)}`;
+        i += code.length - 1;
         continue;
       }
-    }
-    if (chars[i] === '&' && chars[i + 1]) {
-      const next = chars[i + 1].toLowerCase();
-      const legacy = legacyColors[next];
-      if (legacy) color = legacy;
-      i++;
+      if (lower.startsWith('<#')) {
+        color = `#${raw.slice(2, 8)}`;
+        i += code.length - 1;
+        continue;
+      }
+      if (lower.startsWith('&x') || lower.startsWith('§x')) {
+        color = `#${raw.replace(/[&§x]/gi, '')}`;
+        i += code.length - 1;
+        continue;
+      }
+      const next = lower[1];
+      if (legacyColors[next]) {
+        color = legacyColors[next];
+        styles.clear();
+      } else if (next === 'r') {
+        color = '#eef4f8';
+        styles.clear();
+      } else if ('klmno'.includes(next)) {
+        styles.add(next);
+      }
+      i += code.length - 1;
       continue;
     }
-    html += `<span style="color:${color}">${escapeHtml(chars[i])}</span>`;
+    html += `<span style="${styleAttr(color, styles)}">${escapeHtml(chars[i])}</span>`;
   }
   return html;
+}
+
+function styleAttr(color, styles) {
+  const declarations = [`color:${color}`];
+  if (styles.has('l')) declarations.push('font-weight:800');
+  if (styles.has('o')) declarations.push('font-style:italic');
+  const decorations = [];
+  if (styles.has('n')) decorations.push('underline');
+  if (styles.has('m')) decorations.push('line-through');
+  if (decorations.length) declarations.push(`text-decoration:${decorations.join(' ')}`);
+  if (styles.has('k')) declarations.push('filter:blur(.8px)');
+  return declarations.join(';');
 }
 
 const legacyColors = {
@@ -581,6 +898,29 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replace(/"/g, '&quot;');
+}
+
+function lines(value) {
+  return String(value || '').split('\n').map((line) => line.trim()).filter(Boolean);
+}
+
+function asLines(value) {
+  return Array.isArray(value) ? value.join('\n') : String(value || '');
+}
+
+function parseKeyValueLines(value) {
+  return lines(value).reduce((result, line) => {
+    const separator = line.indexOf('=');
+    if (separator <= 0) return result;
+    const key = line.slice(0, separator).trim();
+    const val = line.slice(separator + 1).trim();
+    if (key) result[key] = val;
+    return result;
+  }, {});
+}
+
+function keyValueLines(value) {
+  return Object.entries(value || {}).map(([key, val]) => `${key}=${val}`).join('\n');
 }
 
 function firstVariantFrame(variant) {
@@ -631,7 +971,7 @@ async function saveSessionDraft() {
 
   try {
     const api = activeSession.apiUrl.replace(/\/$/, '');
-    const payload = JSON.parse($('payloadOutput').value);
+    const payload = currentPayload();
     const response = await fetch(`${api}/sessions/${encodeURIComponent(activeSession.id)}`, {
       method: 'PUT',
       headers: {
@@ -700,6 +1040,10 @@ function syncSelectedFromForm() {
   tag.economy.enabled = $('fieldEconomyEnabled').checked;
   tag.tag = $('fieldTagFrames').value.split('\n').filter(Boolean);
   tag.description = $('fieldDescription').value.split('\n');
+  tag.groups = lines($('fieldGroups').value);
+  tag.effects = lines($('fieldEffects').value);
+  tag.abilities = lines($('fieldAbilities').value);
+  tag.customPlaceholders = parseKeyValueLines($('fieldCustomPlaceholders').value);
   tag.displayName = $('fieldDisplayName').value;
   tag.displayItem = $('fieldDisplayItem').value;
   tag.customModelData = Number($('fieldModelData').value || 0);

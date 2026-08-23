@@ -349,6 +349,7 @@ label {
 
 .tag-list-panel,
 .details-panel,
+.bulk-panel,
 .bulk-layout > section,
 .bulk-preview,
 .color-lab > section,
@@ -361,6 +362,56 @@ label {
   border-radius: 8px;
   background: var(--panel);
   box-shadow: var(--shadow);
+}
+
+.bulk-panel {
+  display: none;
+  margin-bottom: 16px;
+  padding: 16px;
+}
+
+.bulk-panel.active {
+  display: block;
+}
+
+.bulk-head,
+.bulk-actions-row,
+.mini-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bulk-head {
+  margin-bottom: 14px;
+}
+
+.bulk-head strong,
+.mini-card-head strong {
+  display: block;
+}
+
+.bulk-head span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.bulk-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.bulk-actions-row {
+  align-items: end;
+  margin-top: 14px;
+}
+
+.bulk-actions-row .primary-button {
+  flex: 0 0 auto;
 }
 
 .tag-list-panel {
@@ -575,6 +626,21 @@ label {
   margin-top: 12px;
 }
 
+.mini-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.mini-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .mini-row {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) minmax(0, 1.2fr) auto;
@@ -593,6 +659,16 @@ label {
   background: rgba(255, 102, 122, .16);
   color: var(--red);
   cursor: pointer;
+}
+
+.danger-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 102, 122, .16);
+  color: var(--red);
+  cursor: pointer;
+  font-size: 20px;
 }
 
 .requirement-head {
@@ -752,6 +828,24 @@ label {
 
 .color-lab label {
   margin-top: 14px;
+}
+
+.format-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.format-tools button {
+  min-width: 40px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
 }
 
 .color-row {
@@ -962,6 +1056,7 @@ body.invalid-session-active .app-shell {
   }
 
   .editor-grid,
+  .bulk-grid,
   .bulk-layout,
   .color-lab,
   .command-layout,
@@ -1016,10 +1111,17 @@ body.invalid-session-active .app-shell {
 
   .form-grid,
   .bulk-controls,
+  .bulk-grid,
+  .mini-card-grid,
   .steps,
   .version-grid,
   .mini-row {
     grid-template-columns: 1fr;
+  }
+
+  .bulk-actions-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .tag-list {
