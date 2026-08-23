@@ -614,12 +614,19 @@ function compareVersions(current, latest) {
 
 $('applyChangesButton').addEventListener('click', async () => {
   syncSelectedFromForm();
+  const originalApplyText = $('applyChangesButton').innerHTML;
+  $('applyChangesButton').disabled = true;
+  $('applyChangesButton').innerHTML = `${icons.download} Saving...`;
   if (!activeSession.id) {
+    $('applyChangesButton').disabled = false;
+    $('applyChangesButton').innerHTML = originalApplyText;
     showApplyModal('/tags editor web', 'This page is not connected to a web session. Create a new session from your server first.');
     return;
   }
 
   const saved = await saveSessionDraft();
+  $('applyChangesButton').disabled = false;
+  $('applyChangesButton').innerHTML = originalApplyText;
   if (saved) {
     lockEditorAfterApply();
     showApplyModal(`/tags editor apply ${activeSession.id}`, 'Run this command on your server to apply the saved editor changes.');
@@ -985,17 +992,43 @@ async function saveSessionDraft() {
       return false;
     }
     if (!response.ok) throw new Error(await response.text());
-    const verifyResponse = await fetch(`${api}/sessions/${encodeURIComponent(activeSession.id)}?token=${encodeURIComponent(activeSession.token)}`);
-    if (!verifyResponse.ok) throw new Error(`Could not verify saved session: HTTP ${verifyResponse.status}`);
-    const verified = await verifyResponse.json();
-    if (!samePayloadTags(payload, verified.payload)) {
-      throw new Error('Saved session verification failed. The latest browser changes did not reach the backend.');
-    }
-    return true;
+    return await waitForSavedSession(api, payload);
   } catch (error) {
     console.error(error);
     return false;
   }
+}
+
+async function waitForSavedSession(api, expectedPayload) {
+  const sessionUrl = `${api}/sessions/${encodeURIComponent(activeSession.id)}?token=${encodeURIComponent(activeSession.token)}`;
+  const attempts = [250, 500, 800, 1200, 1600, 2200, 3000];
+  let lastError = 'Session save was not verified.';
+
+  for (const delay of attempts) {
+    await sleep(delay);
+    const verifyResponse = await fetch(sessionUrl, { cache: 'no-store' });
+    if (verifyResponse.status === 410) {
+      showInvalidSession('This editor session has already been applied or has expired. Create a new session with /tags editor web.');
+      return false;
+    }
+    if (!verifyResponse.ok) {
+      lastError = `Could not verify saved session: HTTP ${verifyResponse.status}`;
+      continue;
+    }
+
+    const verified = await verifyResponse.json();
+    if (verified.status !== 'ready') {
+      lastError = `Session is still ${verified.status || 'not ready'}.`;
+      continue;
+    }
+    if (!samePayload(expectedPayload, verified.payload)) {
+      lastError = 'Saved session verification failed. The latest browser changes did not reach the backend.';
+      continue;
+    }
+    return true;
+  }
+
+  throw new Error(lastError);
 }
 
 function applyPayload(payload) {
@@ -1064,23 +1097,40 @@ function syncSelectedFromForm() {
   }
 }
 
-function samePayloadTags(expected, actual) {
-  const expectedTags = expected?.data?.tags || [];
-  const actualTags = actual?.data?.tags || [];
-  if (expectedTags.length !== actualTags.length) {
-    return false;
-  }
+function samePayload(expected, actual) {
+  return stableStringify(expected) === stableStringify(actual);
+}
 
-  const expectedIds = expectedTags.map((tag) => tag.identifier).sort().join('|');
-  const actualIds = actualTags.map((tag) => tag.identifier).sort().join('|');
-  return expectedIds === actualIds;
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function showInvalidSession(message) {
+  clearSessionUrl();
   document.body.classList.add('invalid-session-active');
   if (message) {
     const note = document.querySelector('.small-note');
     if (note) note.textContent = message;
+  }
+}
+
+function clearSessionUrl() {
+  if (!window.history?.replaceState) return;
+  const cleanUrl = window.location.hostname === 'supremetags.net'
+    ? `${window.location.origin}/`
+    : `${window.location.origin}${window.location.pathname}`;
+  if (window.location.href !== cleanUrl) {
+    window.history.replaceState({}, document.title, cleanUrl);
   }
 }
 
