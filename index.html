@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SupremeTags Editor</title>
+  <link rel="icon" type="image/jpeg" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="apple-touch-icon" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,27 +13,63 @@
 </head>
 <body>
   <div class="invalid-session" id="invalidSession">
+    <div class="home-top-actions">
+      <details class="download-menu">
+        <summary>Download</summary>
+        <div class="download-options">
+          <a href="https://www.spigotmc.org/resources/supremetags.103140/" target="_blank" rel="noreferrer">Spigot</a>
+          <a href="https://modrinth.com/plugin/supremetags" target="_blank" rel="noreferrer">Modrinth</a>
+          <a href="https://hangar.papermc.io/ScapeHelp/SupremeTags/versions" target="_blank" rel="noreferrer">Hangar</a>
+        </div>
+      </details>
+      <a class="support-button" href="https://discord.gg/PHpuzZS" target="_blank" rel="noreferrer">Support</a>
+    </div>
+
     <div class="invalid-panel">
-      <div class="brand-mark">ST</div>
-      <p class="eyebrow">SupremeTags Web Editor</p>
-      <h1>Invalid or missing editor session</h1>
-      <p>This editor is opened from a short-lived SupremeTags server session. Start a session in-game, then use the generated editor link.</p>
+      <section class="home-copy">
+        <div class="brand-mark"><img src="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127" alt="SupremeTags logo"></div>
+        <p class="eyebrow">New in SupremeTags</p>
+        <h1>SupremeTags Web Editor</h1>
+        <p class="home-lede">Manage your server tags from a focused browser editor instead of typing every change in-game. Build tags, tune vouchers, edit requirements, preview color codes, and apply the saved session back to your server when you are ready.</p>
 
-      <div class="help-commands">
-        <span>Start a web session</span>
-        <code>/tags editor web</code>
-        <span>Apply your saved edits</span>
-        <code>/tags editor apply &lt;id&gt;</code>
-      </div>
+        <div class="home-actions">
+          <div>
+            <span>Start from your server</span>
+            <code>/tags editor web</code>
+          </div>
+          <div>
+            <span>Apply saved edits</span>
+            <code>/tags editor apply &lt;id&gt;</code>
+          </div>
+        </div>
 
-      <p class="small-note">If you already have a session link, check that it looks like <code>/#/session/&lt;id&gt;?api=...&amp;token=...</code> and that the session has not expired.</p>
+        <div class="session-notice" id="sessionNotice">
+          Web editor links are private, short-lived sessions created in-game. Open a fresh session from your server to start editing.
+        </div>
+      </section>
+
+      <section class="home-preview" aria-label="Editor feature preview">
+        <div class="preview-window">
+          <div class="preview-window-bar"><span></span><span></span><span></span></div>
+          <div class="preview-tag-card">
+            <small>Live tag preview</small>
+            <strong><span style="color:#555555">[</span><span style="color:#f6c453">S</span><span style="color:#e0c86a">u</span><span style="color:#c9cc80">p</span><span style="color:#b3d097">r</span><span style="color:#9cd3ad">e</span><span style="color:#86d7c4">m</span><span style="color:#55d6be">e</span><span style="color:#555555">]</span></strong>
+          </div>
+          <div class="preview-grid">
+            <div><span>Tags</span><b>Bulk tools</b></div>
+            <div><span>Color Lab</span><b>&amp;#rrggbb</b></div>
+            <div><span>Vouchers</span><b>Glow + lore</b></div>
+            <div><span>Rules</span><b>Requirements</b></div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">ST</div>
+        <div class="brand-mark"><img src="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127" alt="SupremeTags logo"></div>
         <div>
           <strong>SupremeTags</strong>
           <span>Web Editor</span>
@@ -43,10 +81,6 @@
           <span data-icon="tag"></span>
           <span>Tags</span>
           <b id="tagCount">0</b>
-        </button>
-        <button class="nav-item" data-view="bulk">
-          <span data-icon="layers"></span>
-          <span>Bulk Edit</span>
         </button>
         <button class="nav-item" data-view="colors">
           <span data-icon="palette"></span>

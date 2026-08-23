@@ -76,9 +76,14 @@ button {
   height: 44px;
   border: 1px solid rgba(246, 196, 83, .42);
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(246, 196, 83, .18), rgba(85, 214, 190, .12));
-  color: var(--gold);
-  font-weight: 800;
+  background: #0d1218;
+  overflow: hidden;
+}
+
+.brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .brand strong,
@@ -901,19 +906,102 @@ label {
 }
 
 .invalid-session {
+  position: relative;
   display: none;
   min-height: 100vh;
   padding: 24px;
   place-items: center;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(246, 196, 83, .08), transparent 34%),
-    radial-gradient(circle at 80% 30%, rgba(85, 214, 190, .07), transparent 30%),
-    var(--bg);
+  background: var(--bg);
+}
+
+.home-top-actions {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.download-menu {
+  position: relative;
+}
+
+.download-menu summary,
+.support-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 15px;
+  border-radius: 8px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.download-menu summary {
+  list-style: none;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.download-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.download-menu summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.download-menu[open] summary::after {
+  transform: rotate(225deg) translateY(-1px);
+}
+
+.support-button {
+  background: var(--gold);
+  color: #1b1404;
+}
+
+.download-options {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  min-width: 180px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.download-options a {
+  padding: 10px 11px;
+  border-radius: 7px;
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.download-options a:hover {
+  background: var(--panel-2);
 }
 
 .invalid-panel {
-  width: min(100%, 680px);
-  padding: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(300px, .95fr);
+  gap: 28px;
+  width: min(100%, 1120px);
+  padding: 30px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -926,6 +1014,39 @@ label {
 
 .invalid-panel h1 {
   margin-bottom: 12px;
+  font-size: 42px;
+}
+
+.home-copy {
+  display: grid;
+  align-content: center;
+}
+
+.home-lede {
+  max-width: 660px;
+  margin-bottom: 22px;
+  color: #b8c7d1;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.home-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.home-actions div {
+  display: grid;
+  gap: 9px;
+}
+
+.home-actions span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .help-commands {
@@ -959,6 +1080,87 @@ code {
 .small-note {
   margin-bottom: 0;
   font-size: 13px;
+}
+
+.session-notice {
+  padding: 14px;
+  border: 1px solid rgba(85, 214, 190, .28);
+  border-radius: 8px;
+  background: rgba(85, 214, 190, .08);
+  color: #c8d7df;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.session-notice.warning {
+  border-color: rgba(255, 102, 122, .36);
+  background: rgba(255, 102, 122, .09);
+}
+
+.home-preview {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+}
+
+.preview-window {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.preview-window-bar {
+  display: flex;
+  gap: 7px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.preview-window-bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.preview-tag-card {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.preview-tag-card small,
+.preview-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.preview-tag-card strong {
+  font-size: 32px;
+  overflow-wrap: anywhere;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.preview-grid div {
+  display: grid;
+  gap: 6px;
+  padding: 13px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel-2);
 }
 
 .modal-backdrop {
@@ -1113,10 +1315,33 @@ body.invalid-session-active .app-shell {
   .bulk-controls,
   .bulk-grid,
   .mini-card-grid,
+  .invalid-panel,
+  .home-actions,
+  .preview-grid,
   .steps,
   .version-grid,
   .mini-row {
     grid-template-columns: 1fr;
+  }
+
+  .invalid-panel {
+    padding: 22px;
+  }
+
+  .invalid-panel h1 {
+    font-size: 34px;
+  }
+
+  .home-top-actions {
+    position: static;
+    justify-content: flex-end;
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  .download-options {
+    right: auto;
+    left: 0;
   }
 
   .bulk-actions-row {

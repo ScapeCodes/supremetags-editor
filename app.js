@@ -1118,9 +1118,10 @@ function sleep(ms) {
 function showInvalidSession(message) {
   clearSessionUrl();
   document.body.classList.add('invalid-session-active');
-  if (message) {
-    const note = document.querySelector('.small-note');
-    if (note) note.textContent = message;
+  const notice = $('sessionNotice');
+  if (notice) {
+    notice.textContent = message || 'Web editor links are private, short-lived sessions created in-game. Open a fresh session from your server to start editing.';
+    notice.classList.toggle('warning', Boolean(message));
   }
 }
 
