@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SupremeTags Editor</title>
+  <link rel="icon" type="image/jpeg" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="apple-touch-icon" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <div class="invalid-session" id="invalidSession">
+    <div class="home-top-actions">
+      <details class="download-menu">
+        <summary>Download</summary>
+        <div class="download-options">
+          <a href="../downloads/SupremeTags-2.2.9.jar" download data-release-href="stable">Latest jar</a>
+          <a href="../downloads/">All versions</a>
+          <a href="../">Homepage</a>
+        </div>
+      </details>
+      <a class="support-button" href="https://discord.gg/PHpuzZS" target="_blank" rel="noreferrer">Support</a>
+    </div>
+
+    <div class="invalid-panel">
+      <section class="home-copy">
+        <div class="brand-mark"><img src="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127" alt="SupremeTags logo"></div>
+        <p class="eyebrow">New in SupremeTags</p>
+        <h1>SupremeTags Web Editor</h1>
+        <p class="home-lede">Manage your server tags from a focused browser editor instead of typing every change in-game. Build tags, tune vouchers, edit requirements, preview color codes, and apply the saved session back to your server when you are ready.</p>
+
+        <div class="home-actions">
+          <div>
+            <span>Start from your server</span>
+            <code>/tags editor web</code>
+          </div>
+          <div>
+            <span>Apply saved edits</span>
+            <code>/tags editor apply &lt;id&gt;</code>
+          </div>
+        </div>
+
+        <div class="session-notice" id="sessionNotice">
+          Web editor links are private, short-lived sessions created in-game. Open a fresh session from your server to start editing.
+        </div>
+      </section>
+
+      <section class="home-preview" aria-label="Editor feature preview">
+        <div class="preview-window">
+          <div class="preview-window-bar"><span></span><span></span><span></span></div>
+          <div class="preview-tag-card">
+            <small>Live tag preview</small>
+            <strong><span style="color:#555555">[</span><span style="color:#f6c453">S</span><span style="color:#e0c86a">u</span><span style="color:#c9cc80">p</span><span style="color:#b3d097">r</span><span style="color:#9cd3ad">e</span><span style="color:#86d7c4">m</span><span style="color:#55d6be">e</span><span style="color:#555555">]</span></strong>
+          </div>
+          <div class="preview-grid">
+            <div><span>Tags</span><b>Bulk tools</b></div>
+            <div><span>Color Lab</span><b>&amp;#rrggbb</b></div>
+            <div><span>Vouchers</span><b>Glow + lore</b></div>
+            <div><span>Rules</span><b>Requirements</b></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><img src="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127" alt="SupremeTags logo"></div>
+        <div>
+          <strong>SupremeTags</strong>
+          <span>Web Editor</span>
+        </div>
+      </div>
+
+      <nav class="nav-list" aria-label="Editor navigation">
+        <button class="nav-item active" data-view="tags">
+          <span data-icon="tag"></span>
+          <span>Tags</span>
+          <b id="tagCount">0</b>
+        </button>
+        <button class="nav-item" data-view="colors">
+          <span data-icon="palette"></span>
+          <span>Color Lab</span>
+        </button>
+        <button class="nav-item" data-view="plugin">
+          <span data-icon="info"></span>
+          <span>Plugin Info</span>
+        </button>
+      </nav>
+
+      <div class="session-card">
+        <span class="status-dot" id="sidebarStatusDot"></span>
+        <div>
+          <strong id="sidebarPluginTitle">SupremeTags</strong>
+          <span id="sidebarPluginVersion">v2.2.9 · up to date</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Editor session</p>
+          <h1>Tag collection</h1>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button" id="undoButton" title="Undo">
+            <span data-icon="undo"></span>
+          </button>
+          <button class="ghost-button" id="importButton">
+            <span data-icon="upload"></span>
+            Import
+          </button>
+          <button class="primary-button" id="applyChangesButton">
+            <span data-icon="download"></span>
+            Apply Changes
+          </button>
+        </div>
+      </header>
+
+      <section class="view active" id="view-tags">
+        <div class="toolbar">
+          <div class="search-field">
+            <span data-icon="search"></span>
+            <input id="searchInput" type="search" placeholder="Search tags, permissions, categories">
+          </div>
+          <select id="categoryFilter" aria-label="Category filter"></select>
+          <select id="rarityFilter" aria-label="Rarity filter"></select>
+          <button class="secondary-button" id="newTagButton">
+            <span data-icon="plus"></span>
+            New Tag
+          </button>
+          <button class="secondary-button" id="toggleBulkButton" type="button">
+            <span data-icon="wand"></span>
+            Bulk Tools
+          </button>
+        </div>
+
+        <section class="bulk-panel" id="bulkPanel" aria-label="Bulk tag tools">
+          <div class="bulk-head">
+            <div>
+              <strong>Bulk tools</strong>
+              <span id="bulkSummary">No tags matched</span>
+            </div>
+            <button class="icon-button" id="closeBulkButton" type="button" title="Close bulk tools">×</button>
+          </div>
+          <div class="bulk-grid">
+            <label>Match category<select id="bulkMatchCategory"></select></label>
+            <label>Match rarity<select id="bulkMatchRarity"></select></label>
+            <label>Text contains<input id="bulkMatchText" placeholder="identifier, permission, display text"></label>
+            <label>Set category<select id="bulkSetCategory"></select></label>
+            <label>Set rarity<select id="bulkSetRarity"></select></label>
+            <label>Permission prefix<input id="bulkPermission" placeholder="supremetags.tag."></label>
+            <label>Add group<input id="bulkAddGroup" placeholder="vip"></label>
+            <label>Remove group<input id="bulkRemoveGroup" placeholder="default"></label>
+            <label>Set cost<input id="bulkSetCost" type="number" min="0" step="0.01" placeholder="unchanged"></label>
+            <label>Economy<select id="bulkEconomyState"><option value="">No change</option><option value="true">Enabled</option><option value="false">Disabled</option></select></label>
+          </div>
+          <div class="bulk-actions-row">
+            <div id="bulkMatches"></div>
+            <button class="primary-button" id="applyBulkButton" type="button"><span data-icon="wand"></span>Apply to matches</button>
+          </div>
+        </section>
+
+        <div class="editor-grid">
+          <section class="tag-list-panel">
+            <div class="panel-title">
+              <strong>Tags</strong>
+              <span id="visibleCount">0 visible</span>
+            </div>
+            <div class="tag-list" id="tagList"></div>
+          </section>
+
+          <section class="details-panel">
+            <div class="details-header">
+              <div>
+                <p class="eyebrow">Selected tag</p>
+                <h2 id="detailTitle">Select a tag</h2>
+              </div>
+              <div class="preview-pill" id="headerPreview"></div>
+            </div>
+
+            <div class="tab-strip" role="tablist">
+              <button class="tab-button active" data-tab="basic">Basic</button>
+              <button class="tab-button" data-tab="display">Display</button>
+              <button class="tab-button" data-tab="voucher">Voucher</button>
+              <button class="tab-button" data-tab="variants">Variants</button>
+              <button class="tab-button" data-tab="requirements">Requirements</button>
+            </div>
+
+            <form class="form-grid tab-panel active" id="tab-basic">
+              <label>Identifier<input id="fieldIdentifier" type="text"></label>
+              <label>Permission<input id="fieldPermission" type="text"></label>
+              <label>Category<select id="fieldCategory"></select></label>
+              <label>Rarity<select id="fieldRarity"></select></label>
+              <label>Order<input id="fieldOrder" type="number" min="0"></label>
+              <label>Cost<input id="fieldCost" type="number" min="0" step="0.01"></label>
+              <label class="switch-row">Withdrawable<input id="fieldWithdrawable" type="checkbox"><span></span></label>
+              <label class="switch-row">Economy enabled<input id="fieldEconomyEnabled" type="checkbox"><span></span></label>
+              <label class="full-span">Tag frames<textarea id="fieldTagFrames" rows="4"></textarea></label>
+              <label class="full-span">Description<textarea id="fieldDescription" rows="4"></textarea></label>
+              <label class="full-span">Permission groups<textarea id="fieldGroups" rows="3" placeholder="vip&#10;mvp"></textarea></label>
+              <label class="full-span">Potion effects<textarea id="fieldEffects" rows="3" placeholder="SPEED:1&#10;JUMP:2"></textarea></label>
+              <label class="full-span">Abilities<textarea id="fieldAbilities" rows="3" placeholder="fly&#10;double_jump"></textarea></label>
+              <label class="full-span">Custom placeholders<textarea id="fieldCustomPlaceholders" rows="4" placeholder="nopermission=&amp;cYou do not have permission.&#10;wheretofind=&amp;eAvailable in crates."></textarea></label>
+            </form>
+
+            <form class="form-grid tab-panel" id="tab-display">
+              <label>Menu display name<input id="fieldDisplayName" type="text"></label>
+              <label>Display item<input id="fieldDisplayItem" type="text"></label>
+              <label>Custom model data<input id="fieldModelData" type="number" min="0"></label>
+              <label>Economy type<input id="fieldEconomyType" type="text"></label>
+              <label class="full-span">Custom economy take command<input id="fieldTakeCommand" type="text"></label>
+              <label class="full-span">Custom economy condition<input id="fieldCondition" type="text"></label>
+              <div class="full-span preview-box">
+                <span>Live chat preview</span>
+                <strong id="chatPreview"></strong>
+              </div>
+            </form>
+
+            <form class="form-grid tab-panel" id="tab-voucher">
+              <label>Voucher material<input id="fieldVoucherMaterial" type="text"></label>
+              <label>Voucher model data<input id="fieldVoucherModelData" type="number" min="0"></label>
+              <label>Voucher display name<input id="fieldVoucherName" type="text"></label>
+              <label class="switch-row">Glow<input id="fieldVoucherGlow" type="checkbox"><span></span></label>
+              <label class="full-span">Voucher lore<textarea id="fieldVoucherLore" rows="5"></textarea></label>
+            </form>
+
+            <div class="tab-panel" id="tab-variants">
+              <div class="table-actions">
+                <strong>Variants</strong>
+                <button class="secondary-button" id="addVariantButton" type="button"><span data-icon="plus"></span>Add</button>
+              </div>
+              <div class="mini-table" id="variantTable"></div>
+            </div>
+
+            <div class="tab-panel" id="tab-requirements">
+              <div class="requirement-head">
+                <label class="switch-row">Enabled<input id="fieldReqEnabled" type="checkbox"><span></span></label>
+                <label>Mode<select id="fieldReqMode"><option value="all">All</option><option value="any">Any</option></select></label>
+                <label class="switch-row">Persist unlock<input id="fieldReqPersist" type="checkbox"><span></span></label>
+              </div>
+              <div class="table-actions">
+                <strong>Requirement rules</strong>
+                <button class="secondary-button" id="addRequirementButton" type="button"><span data-icon="plus"></span>Add</button>
+              </div>
+              <div class="mini-table" id="requirementTable"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-colors">
+        <div class="color-lab">
+          <section>
+            <h2>Color Lab</h2>
+            <p>Write normal Minecraft color codes, preview them live, then generate gradients without losing formatting.</p>
+            <label>Text<textarea id="colorText" rows="5">&amp;8[&amp;lSupreme&amp;8]</textarea></label>
+            <div class="format-tools" aria-label="Formatting shortcuts">
+              <button type="button" data-format-code="&amp;l"><b>B</b></button>
+              <button type="button" data-format-code="&amp;o"><i>I</i></button>
+              <button type="button" data-format-code="&amp;n"><u>U</u></button>
+              <button type="button" data-format-code="&amp;m"><s>S</s></button>
+              <button type="button" data-format-code="&amp;r">Reset</button>
+            </div>
+            <div class="color-row">
+              <label>Start<input id="colorStart" type="color" value="#f6c453"></label>
+              <label>End<input id="colorEnd" type="color" value="#55d6be"></label>
+              <label>Color step<input id="colorStep" type="number" min="1" max="32" value="1"></label>
+              <label class="switch-row">Trim spaces<input id="colorTrimSpaces" type="checkbox" checked><span></span></label>
+            </div>
+            <div class="color-row">
+              <label>Output format<select id="colorFormat">
+                <option value="legacy">Minecraft hex (&amp;#rrggbb)</option>
+                <option value="ampx">Legacy hex (&amp;x&amp;r&amp;r&amp;g&amp;g&amp;b&amp;b)</option>
+                <option value="sectionx">Section hex (§x§r§r§g§g§b§b)</option>
+                <option value="minimessage">MiniMessage gradient</option>
+                <option value="minimessage-single">MiniMessage hex (&lt;#rrggbb&gt;)</option>
+                <option value="classic">Nearest legacy (&amp;a)</option>
+              </select></label>
+              <label>Prefix / suffix<input id="colorWrapper" placeholder="/nick $t"></label>
+            </div>
+            <div class="command-actions">
+              <button class="secondary-button" id="swapColorsButton" type="button"><span data-icon="swap"></span>Swap</button>
+              <button class="secondary-button" id="reverseTextButton" type="button"><span data-icon="reverse"></span>Reverse</button>
+              <button class="primary-button" id="applyColorToTagButton" type="button"><span data-icon="tag"></span>Use on selected tag</button>
+            </div>
+          </section>
+          <section class="output-panel">
+            <div class="preview-box tall">
+              <span>Typed code preview</span>
+              <strong id="typedColorPreview"></strong>
+            </div>
+            <div class="preview-box tall">
+              <span>Generated preview</span>
+              <strong id="colorPreview"></strong>
+            </div>
+            <label>Output<textarea id="colorOutput" rows="6" readonly></textarea></label>
+            <button class="secondary-button" id="copyColorButton"><span data-icon="copy"></span>Copy</button>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-plugin">
+        <div class="plugin-layout">
+          <section class="plugin-status-panel">
+            <div class="plugin-status-head">
+              <div>
+                <p class="eyebrow">Server plugin</p>
+                <h2>SupremeTags status</h2>
+              </div>
+              <span class="version-state" id="pluginVersionState">Checking</span>
+            </div>
+
+            <div class="version-grid">
+              <div>
+                <span>Installed version</span>
+                <strong id="installedVersion">2.2.9</strong>
+              </div>
+              <div>
+                <span>Latest Spigot version</span>
+                <strong id="latestVersion">2.2.9</strong>
+              </div>
+              <div>
+                <span>Resource</span>
+                <a href="https://www.spigotmc.org/resources/supremetags.103140/" target="_blank" rel="noreferrer">SpigotMC #103140</a>
+              </div>
+            </div>
+
+            <div class="update-callout" id="updateCallout">
+              <span data-icon="check"></span>
+              <div>
+                <strong>Plugin is up to date</strong>
+                <p>The server-reported version matches the latest known Spigot release.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="plugin-details-panel">
+            <h3>Runtime details</h3>
+            <div class="info-list">
+              <div><span>Minecraft server</span><strong id="serverVersion">Paper 26.2</strong></div>
+              <div><span>Storage mode</span><strong id="storageMode">File tags</strong></div>
+              <div><span>Tags loaded</span><strong id="pluginTagsLoaded">3</strong></div>
+              <div><span>Categories loaded</span><strong id="pluginCategoriesLoaded">4</strong></div>
+              <div><span>Last checked</span><strong id="versionCheckedAt">Local preview</strong></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <div class="modal-backdrop" id="applyModal" aria-hidden="true">
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="applyModalTitle">
+          <h2 id="applyModalTitle">Apply changes in-game</h2>
+          <p id="applyModalText">Run this command on your server to apply the saved editor changes.</p>
+          <code id="applyCommand">/tags editor apply &lt;id&gt;</code>
+          <div class="modal-actions">
+            <button class="secondary-button" id="copyApplyCommand"><span data-icon="copy"></span>Copy</button>
+            <button class="primary-button" id="closeApplyModal">Done</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../app.js"></script>
+  <script src="../releases.js"></script>
+</body>
+</html>

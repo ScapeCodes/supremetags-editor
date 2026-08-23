@@ -1,0 +1,20 @@
+{
+  "stable": {
+    "version": "2.2.9",
+    "file": "SupremeTags-2.2.9.jar",
+    "label": "SupremeTags 2.2.9",
+    "badge": "Required",
+    "status": "stable",
+    "summary": "Latest stable jar",
+    "description": "For server tags, categories, vouchers, variants, personal tags, requirements, and much more!"
+  },
+  "development": {
+    "version": "2.2.10",
+    "file": "",
+    "label": "SupremeTags",
+    "badge": "Dev build",
+    "status": "coming_soon",
+    "summary": "Coming soon",
+    "description": "The next development build is being prepared and will be available here once it is ready for public testing."
+  }
+}

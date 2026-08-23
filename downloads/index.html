@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download SupremeTags</title>
+  <link rel="icon" type="image/jpeg" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="apple-touch-icon" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="downloads-page">
+  <header class="site-header downloads-header">
+    <a class="site-brand" href="/" aria-label="SupremeTags home">
+      <span class="brand-mark"><img src="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127" alt=""></span>
+      <span>SupremeTags</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="/#features">Features</a>
+      <a href="/downloads/" aria-current="page">Downloads</a>
+      <a href="/editor/">Editor</a>
+      <a href="https://discord.gg/PHpuzZS" target="_blank" rel="noreferrer">Support</a>
+    </nav>
+    <a class="primary-button site-download-button" href="SupremeTags-2.2.9.jar" download data-release-href="stable">
+      <span data-icon="download"></span>
+      Download
+    </a>
+  </header>
+
+  <main>
+    <section class="download-hero">
+      <div>
+        <p class="eyebrow">On-site releases</p>
+        <h1>Download SupremeTags</h1>
+        <p>Get the latest SupremeTags jar hosted directly by this website, plus the server requirements you need before installing.</p>
+      </div>
+    </section>
+
+    <section class="download-page-layout">
+      <div class="download-main">
+        <article class="download-alert">
+          <span data-icon="info"></span>
+          <div>
+            <strong>Install note</strong>
+            <p>SupremeTags depends on NBTAPI. Put both jars in your server plugins folder, restart, then run <code>/tags</code>.</p>
+          </div>
+        </article>
+
+        <div class="download-tabs" role="tablist" aria-label="Release channel">
+          <button class="active" type="button">Stable Release</button>
+          <button type="button" disabled data-development-tab>Development Build</button>
+        </div>
+
+        <p class="release-intro" data-release-intro>The WebEditor is not yet been released, it will be released in <strong>2.2.10</strong>.</p>
+
+        <div class="download-section-head">
+          <h2>Plugins</h2>
+          <a class="primary-button" href="SupremeTags-2.2.9.jar" download data-release-href="stable">
+            <span data-icon="download"></span>
+            Download Selected
+          </a>
+        </div>
+
+        <div id="releasePackages">
+          <article class="download-package selected">
+            <label class="package-select" aria-label="SupremeTags selected">
+              <input type="checkbox" checked disabled>
+              <span></span>
+            </label>
+            <div>
+              <h3>SupremeTags <small>Required</small></h3>
+              <p>Core plugin for server tags, categories, vouchers, variants, personal tags, requirements, and much more!</p>
+              <span class="package-version">2.2.9 stable</span>
+            </div>
+            <a class="download-icon-button" href="SupremeTags-2.2.9.jar" download aria-label="Download SupremeTags 2.2.9">
+              <span data-icon="download"></span>
+            </a>
+          </article>
+        </div>
+
+        <section class="download-details">
+          <h2>Included features</h2>
+          <div class="details-grid">
+            <div><strong>Tag editor</strong><span>Bulk edits, live previews, variants, vouchers, and requirements.</span></div>
+            <div><strong>Personal tags</strong><span>Player-created tag flows with moderation and banned word controls.</span></div>
+            <div><strong>Storage support</strong><span>File tags with SQLite, H2, MySQL, and Redis-backed workflows in the plugin.</span></div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="download-sidebar">
+        <section>
+          <h2>SupremeTags supports</h2>
+          <ul>
+            <li><strong>Paper servers</strong><span>Built for Bukkit/Paper plugin environments.</span></li>
+            <li><strong>Folia</strong><span>The plugin metadata marks Folia support as enabled.</span></li>
+            <li><strong>PlaceholderAPI</strong><span>Optional integration for rich tag and requirement placeholders.</span></li>
+          </ul>
+        </section>
+        <section>
+          <h2>Requirements</h2>
+          <ul>
+            <li><strong>NBTAPI is required</strong><span>Install it before starting SupremeTags.</span></li>
+            <li><strong>Java server jar</strong><span>Use the downloaded <code>.jar</code> file directly.</span></li>
+            <li><strong>Optional hooks</strong><span>Vault, LuckPerms, ProtocolLib, PlaceholderAPI, ItemsAdder, Nexo, and more can extend behavior.</span></li>
+          </ul>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>SupremeTags</span>
+    <a href="/">Home</a>
+    <a href="/editor/">Editor</a>
+    <a href="https://discord.gg/PHpuzZS" target="_blank" rel="noreferrer">Support</a>
+  </footer>
+  <script>
+    const icons = {
+      download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
+      info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>'
+    };
+    document.querySelectorAll('[data-icon]').forEach((node) => {
+      node.innerHTML = icons[node.dataset.icon] || '';
+    });
+  </script>
+  <script src="../releases.js"></script>
+</body>
+</html>

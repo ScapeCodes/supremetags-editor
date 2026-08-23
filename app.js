@@ -1127,9 +1127,8 @@ function showInvalidSession(message) {
 
 function clearSessionUrl() {
   if (!window.history?.replaceState) return;
-  const cleanUrl = window.location.hostname === 'supremetags.net'
-    ? `${window.location.origin}/`
-    : `${window.location.origin}${window.location.pathname}`;
+  const path = window.location.pathname.endsWith('/editor') ? '/editor/' : window.location.pathname;
+  const cleanUrl = `${window.location.origin}${path || '/'}`;
   if (window.location.href !== cleanUrl) {
     window.history.replaceState({}, document.title, cleanUrl);
   }
