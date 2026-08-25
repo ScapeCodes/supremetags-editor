@@ -2,6 +2,8 @@ const icons = {
   tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.6 13.1 13.1 20.6a2 2 0 0 1-2.8 0L3 13.3V3h10.3l7.3 7.3a2 2 0 0 1 0 2.8Z"/><path d="M7.5 7.5h.01"/></svg>',
   layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>',
   palette: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22a10 10 0 1 1 10-10c0 2.2-1.8 4-4 4h-1.5a1.5 1.5 0 0 0-1.2 2.4l.3.4A2 2 0 0 1 14 22h-2Z"/><path d="M7.5 10.5h.01M10.5 7.5h.01M14.5 7.5h.01M17.5 10.5h.01"/></svg>',
+  droplet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5 6.4 9.2a8 8 0 1 0 11.2 0L12 2.5Z"/></svg>',
+  ban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/></svg>',
   terminal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>',
   cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17.5 19H8a6 6 0 1 1 1.1-11.9A7 7 0 0 1 22 11a4 4 0 0 1-4.5 8Z"/></svg>',
   info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
@@ -13,8 +15,8 @@ const icons = {
   wand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m15 4 5 5L8 21l-5-5L15 4Z"/><path d="m14 5 5 5"/><path d="M5 4v3M3.5 5.5h3M20 16v3M18.5 17.5h3"/></svg>',
   sparkles: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg>',
   copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
-  swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>',
-  reverse: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h11a4 4 0 0 1 0 8H7"/><path d="m7 11-4 4 4 4"/></svg>',
+  minus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14"/></svg>',
+  shuffle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg>'
 };
 
@@ -24,9 +26,19 @@ document.querySelectorAll('[data-icon]').forEach((node) => {
 
 const categories = ['default', 'holiday', 'achievements', 'donator'];
 const rarities = ['common', 'uncommon', 'rare', 'legendary'];
+const editorInfo = {
+  version: '2026.1'
+};
 let history = [];
 let selectedId = 'hexsupport';
+let originalTagSnapshots = new Map();
 let activeTab = 'basic';
+let colorStops = ['#ff4d8d', '#f6c453', '#55d6be', '#5d7cff', '#b45cff'];
+const colorPresets = ['#ff4d8d', '#f6c453', '#55d6be', '#5d7cff', '#b45cff', '#ff7ab6', '#f8f0c5', '#d8f3ec', '#d9e8f8', '#e7dbff', '#05070a', '#555555', '#aaaaaa', '#ffffff'];
+let colorMode = 'gradient';
+let activeColorStopIndex = 0;
+let colorOutputVisible = true;
+let pendingFormatColorSelection = null;
 const routeSession = parseSessionRoute();
 const activeSession = {
   id: routeSession.id,
@@ -93,12 +105,12 @@ let tags = [
 ];
 
 const pluginInfo = {
-  installedVersion: '2.2.9',
-  latestVersion: '2.2.9',
+  installedVersion: '3.0.0',
+  latestVersion: '3.0.0',
   serverVersion: 'Paper 26.2',
   storageMode: 'File tags',
   categoriesLoaded: categories.length,
-  checkedAt: 'SpigotMC checked 2026-08-22'
+  checkedAt: 'SpigotMC checked 2026-08-25'
 };
 
 const $ = (id) => document.getElementById(id);
@@ -179,6 +191,27 @@ function normalizeRequirement(rule) {
 function pushHistory() {
   history.push(JSON.stringify(tags));
   if (history.length > 40) history.shift();
+}
+
+function cloneTag(tag) {
+  return JSON.parse(JSON.stringify(tag));
+}
+
+function setOriginalIdentifier(tag, identifier) {
+  Object.defineProperty(tag, '__originalIdentifier', {
+    value: identifier,
+    writable: true,
+    configurable: true
+  });
+}
+
+function establishTagBaseline(sourceTags = tags) {
+  originalTagSnapshots = new Map();
+  sourceTags.forEach((tag) => {
+    const normalized = normalizeTag(tag);
+    originalTagSnapshots.set(normalized.identifier, cloneTag(normalized));
+    setOriginalIdentifier(normalized, normalized.identifier);
+  });
 }
 
 function fillSelect(select, values, allLabel) {
@@ -295,6 +328,80 @@ function updateSelectedInline(mutator) {
   renderTagList();
   renderBulkMatches();
   renderPayload();
+}
+
+function nextDuplicateIdentifier(identifier) {
+  const match = String(identifier || 'tag').match(/^(.*?)(\d+)?$/);
+  const root = match?.[1] || 'tag';
+  let suffix = Math.max(2, Number(match?.[2] || 1) + 1);
+  let candidate = `${root}${suffix}`;
+  const existing = new Set(tags.map((tag) => tag.identifier));
+  while (existing.has(candidate)) {
+    suffix++;
+    candidate = `${root}${suffix}`;
+  }
+  return candidate;
+}
+
+function duplicateSelectedTag() {
+  const tag = selectedTag();
+  if (!tag) return;
+  closeTagActionsMenu();
+  syncSelectedFromForm();
+  pushHistory();
+  const sourceId = tag.identifier;
+  const nextId = nextDuplicateIdentifier(sourceId);
+  const copy = normalizeTag(JSON.parse(JSON.stringify(tag)));
+  copy.identifier = nextId;
+  copy.order = Number.isFinite(Number(copy.order)) ? Number(copy.order) + 1 : tags.length + 1;
+  if (copy.permission === `supremetags.tag.${sourceId}` || copy.permission.endsWith(`.${sourceId}`)) {
+    copy.permission = copy.permission.slice(0, -sourceId.length) + nextId;
+  }
+  tags.push(copy);
+  selectedId = nextId;
+  render();
+}
+
+function deleteSelectedTag() {
+  const tag = selectedTag();
+  if (!tag) return;
+  closeTagActionsMenu();
+  if (tags.length <= 1) {
+    window.alert('You need at least one tag in the editor.');
+    return;
+  }
+  const confirmed = window.confirm(`Delete tag "${tag.identifier}"? This cannot be undone unless you use Undo before applying changes.`);
+  if (!confirmed) return;
+  pushHistory();
+  const index = tags.findIndex((item) => item.identifier === tag.identifier);
+  if (index === -1) return;
+  tags.splice(index, 1);
+  selectedId = tags[Math.min(index, tags.length - 1)]?.identifier;
+  render();
+}
+
+function resetSelectedTag() {
+  const tag = selectedTag();
+  if (!tag) return;
+  closeTagActionsMenu();
+  const originalIdentifier = tag.__originalIdentifier || tag.identifier;
+  const original = originalTagSnapshots.get(originalIdentifier);
+  if (!original) {
+    window.alert(`No original JSON settings were found for "${tag.identifier}".`);
+    return;
+  }
+  const index = tags.findIndex((item) => item === tag);
+  if (index === -1) return;
+  pushHistory();
+  const restored = normalizeTag(cloneTag(original));
+  setOriginalIdentifier(restored, originalIdentifier);
+  tags[index] = restored;
+  selectedId = restored.identifier;
+  render();
+}
+
+function closeTagActionsMenu() {
+  document.querySelector('.tag-actions-menu')?.removeAttribute('open');
 }
 
 function bindField(id, mutator, eventName = 'input') {
@@ -446,6 +553,9 @@ document.querySelectorAll('.nav-item').forEach((button) => {
     document.querySelectorAll('.view').forEach((node) => node.classList.remove('active'));
     button.classList.add('active');
     $(`view-${button.dataset.view}`).classList.add('active');
+    if (button.dataset.view === 'colors') {
+      generateColor();
+    }
   });
 });
 
@@ -458,6 +568,9 @@ document.querySelectorAll('.tab-button').forEach((button) => {
 });
 
 ['searchInput', 'categoryFilter', 'rarityFilter'].forEach((id) => $(id).addEventListener('input', renderTagList));
+$('duplicateTagButton').addEventListener('click', duplicateSelectedTag);
+$('resetTagButton').addEventListener('click', resetSelectedTag);
+$('deleteTagButton').addEventListener('click', deleteSelectedTag);
 
 $('newTagButton').addEventListener('click', () => {
   pushHistory();
@@ -556,12 +669,14 @@ function renderBulkMatches() {
 
 function renderPayload() {
   currentPayload();
+  renderPluginInfo();
 }
 
 function currentPayload() {
   return {
     schemaVersion: 1,
     editor: 'supremetags-web',
+    editorVersion: editorInfo.version,
     exportedAt: new Date().toISOString(),
     plugin: {
       name: 'SupremeTags',
@@ -581,19 +696,27 @@ function currentPayload() {
 }
 
 function renderPluginInfo() {
+  const variantCount = tags.reduce((total, tag) => total + (Array.isArray(tag.variants) ? tag.variants.length : 0), 0);
+  const requirementCount = tags.reduce((total, tag) => total + (Array.isArray(tag.requirements?.list) ? tag.requirements.list.length : 0), 0);
   $('installedVersion').textContent = pluginInfo.installedVersion;
   $('latestVersion').textContent = pluginInfo.latestVersion;
+  $('editorVersion').textContent = editorInfo.version;
   $('serverVersion').textContent = pluginInfo.serverVersion;
   $('storageMode').textContent = pluginInfo.storageMode;
+  $('editorSessionState').textContent = hasSessionLink ? 'Connected' : 'Local preview';
   $('pluginTagsLoaded').textContent = tags.length;
-  $('pluginCategoriesLoaded').textContent = pluginInfo.categoriesLoaded;
+  $('editorVariantCount').textContent = variantCount;
+  $('editorRequirementCount').textContent = requirementCount;
+  $('pluginCategoriesLoaded').textContent = categories.length;
+  $('editorRarityCount').textContent = rarities.length;
+  $('editorUndoCount').textContent = history.length;
   $('versionCheckedAt').textContent = pluginInfo.checkedAt;
 
   const outdated = compareVersions(pluginInfo.installedVersion, pluginInfo.latestVersion) < 0;
   $('pluginVersionState').textContent = outdated ? 'Update available' : 'Up to date';
   $('pluginVersionState').classList.toggle('outdated', outdated);
   $('sidebarPluginTitle').textContent = 'SupremeTags';
-  $('sidebarPluginVersion').textContent = `v${pluginInfo.installedVersion} · ${outdated ? 'out of date' : 'up to date'}`;
+  $('sidebarPluginVersion').textContent = `Plugin v${pluginInfo.installedVersion} · Editor v${editorInfo.version}`;
   $('sidebarStatusDot').classList.toggle('outdated', outdated);
   $('updateCallout').classList.toggle('outdated', outdated);
   $('updateCallout').innerHTML = outdated
@@ -635,77 +758,346 @@ $('applyChangesButton').addEventListener('click', async () => {
   }
 });
 
-$('importButton').addEventListener('click', () => {
-  const raw = prompt('Paste a SupremeTags editor JSON payload');
-  if (!raw) return;
-  try {
-    const parsed = JSON.parse(raw);
-    applyPayload(parsed);
-  } catch (error) {
-    alert(`Invalid payload: ${error.message}`);
+renderColorStops();
+renderColorOutputVisibility();
+$('colorText').addEventListener('input', () => {
+  generateColor();
+});
+$('colorText').addEventListener('blur', syncControlsFromInput);
+$('colorOutput').addEventListener('click', copyColorOutput);
+$('colorOutput').addEventListener('focus', () => $('colorOutput').select());
+document.querySelectorAll('[data-format-tag]').forEach((button) => {
+  button.addEventListener('mousedown', (event) => event.preventDefault());
+  button.addEventListener('click', () => applyFormatTag(button.dataset.formatTag));
+});
+$('formatColorButton').addEventListener('mousedown', (event) => {
+  event.preventDefault();
+  pendingFormatColorSelection = readTextSelection($('colorText'));
+});
+$('formatColorButton').addEventListener('click', (event) => {
+  event.stopPropagation();
+  pendingFormatColorSelection = pendingFormatColorSelection || readTextSelection($('colorText'));
+  toggleColorPicker($('formatColorPopover'));
+});
+$('formatColorInput').addEventListener('input', () => {
+  $('formatColorSwatch').style.backgroundColor = $('formatColorInput').value;
+});
+$('formatColorInput').addEventListener('change', () => {
+  applyFormatColor($('formatColorInput').value, pendingFormatColorSelection);
+  pendingFormatColorSelection = null;
+});
+$('formatColorPickerControl').addEventListener('input', () => setFormatColorValue($('formatColorPickerControl').value));
+$('formatColorPickerControl').addEventListener('change', () => applySelectedFormatColor());
+document.querySelectorAll('[data-color-mode]').forEach((button) => button.addEventListener('click', () => {
+  colorMode = button.dataset.colorMode;
+  renderColorStops();
+  applyColorSyntaxToInput();
+}));
+$('addColorStopButton').addEventListener('click', () => {
+  if (colorMode === 'solid') colorMode = 'gradient';
+  colorStops.push(colorStops[colorStops.length - 1] || '#ffffff');
+  renderColorStops();
+  applyColorSyntaxToInput();
+});
+$('removeColorStopButton').addEventListener('click', () => {
+  if (colorStops.length <= 1) return;
+  colorStops.pop();
+  activeColorStopIndex = Math.min(activeColorStopIndex, colorStops.length - 1);
+  renderColorStops();
+  applyColorSyntaxToInput();
+});
+$('toggleColorOutputButton').addEventListener('click', () => {
+  colorOutputVisible = !colorOutputVisible;
+  renderColorOutputVisibility();
+});
+$('copyColorButton').addEventListener('click', copyColorOutput);
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.color-stop-row, .format-color-button, .format-color-popover')) {
+    document.querySelectorAll('.color-picker-popover').forEach((panel) => panel.hidden = true);
+  }
+  if (!event.target.closest('.tag-actions-menu')) {
+    closeTagActionsMenu();
   }
 });
+renderFormatColorPresets();
 
-['colorText', 'colorStart', 'colorEnd', 'colorFormat', 'colorStep', 'colorTrimSpaces', 'colorWrapper'].forEach((id) => $(id).addEventListener('input', generateColor));
-document.querySelectorAll('[data-format-code]').forEach((button) => button.addEventListener('click', () => insertAtCursor($('colorText'), button.dataset.formatCode)));
-$('swapColorsButton').addEventListener('click', () => {
-  const start = $('colorStart').value;
-  $('colorStart').value = $('colorEnd').value;
-  $('colorEnd').value = start;
-  generateColor();
-});
-$('reverseTextButton').addEventListener('click', () => {
-  $('colorText').value = reverseVisibleText($('colorText').value);
-  generateColor();
-});
-$('applyColorToTagButton').addEventListener('click', () => {
-  const output = $('colorOutput').value;
-  if (!output) return;
-  updateSelected((tag) => tag.tag = [output]);
-});
-$('copyColorButton').addEventListener('click', () => navigator.clipboard?.writeText($('colorOutput').value));
+async function copyColorOutput() {
+  await navigator.clipboard?.writeText($('colorOutput').value);
+  const button = $('copyColorButton');
+  const old = button.innerHTML;
+  button.innerHTML = `${icons.copy}Copied`;
+  setTimeout(() => button.innerHTML = old, 1100);
+}
 
 function generateColor() {
   const rawText = $('colorText').value || '';
-  const start = $('colorStart').value;
-  const end = $('colorEnd').value;
-  const format = $('colorFormat').value;
-  const step = Math.max(1, Number($('colorStep').value || 1));
-  const trimSpaces = $('colorTrimSpaces').checked;
-  const wrapper = $('colorWrapper').value;
-  const tokens = tokenizeMinecraftText(rawText);
-  const colorable = tokens.filter((token) => token.type === 'char' && (!trimSpaces || !/\s/.test(token.value)));
-  const colors = gradient(start, end, Math.max(1, Math.ceil(colorable.length / step)));
-  let colorIndex = 0;
-  let charsInColor = 0;
-  let generated = '';
+  const generated = normalizeColorLabInput(rawText);
+  $('colorOutput').value = generated;
+  $('colorPreview').innerHTML = miniMessageToHtml(generated);
+}
 
-  if (format === 'minimessage') {
-    generated = `<gradient:${start}:${end}>${escapeMiniMessage(stripMinecraftCodes(rawText))}</gradient>`;
-  } else {
-    tokens.forEach((token) => {
-      if (token.type === 'format') {
-        generated += token.value;
-        return;
-      }
-      if (trimSpaces && /\s/.test(token.value)) {
-        generated += token.value;
-        return;
-      }
-      const color = colors[Math.min(colorIndex, colors.length - 1)];
-      generated += `${formatColorPrefix(color, format)}${token.value}`;
-      charsInColor++;
-      if (charsInColor >= step) {
-        charsInColor = 0;
-        colorIndex++;
-      }
-    });
+function renderColorStops() {
+  const container = $('colorStops');
+  container.innerHTML = '';
+  document.querySelectorAll('[data-color-mode]').forEach((button) => button.classList.toggle('active', button.dataset.colorMode === colorMode));
+  $('colorStops').classList.toggle('empty', colorMode === 'uncolored');
+  $('addColorStopButton').disabled = colorMode === 'uncolored' || colorMode === 'solid';
+  $('removeColorStopButton').disabled = colorMode !== 'gradient' || colorStops.length <= 1;
+
+  if (colorMode === 'uncolored') {
+    container.innerHTML = '<p class="color-mode-note">Color tags are removed. Formatting tags still apply.</p>';
+    $('colorStopCount').textContent = 'No color';
+    return;
   }
 
-  const output = wrapper ? wrapper.replace('$t', generated) : generated;
-  $('colorOutput').value = output;
-  $('typedColorPreview').innerHTML = minecraftToHtml(rawText);
-  $('colorPreview').innerHTML = minecraftToHtml(generated);
+  const visibleStops = colorMode === 'solid' ? colorStops.slice(0, 1) : colorStops;
+  activeColorStopIndex = colorMode === 'solid' ? 0 : Math.min(activeColorStopIndex, visibleStops.length - 1);
+  visibleStops.forEach((color, index) => {
+    const row = document.createElement('div');
+    row.className = `color-stop-row${index === activeColorStopIndex ? ' active' : ''}`;
+    row.innerHTML = `
+      <span>${index + 1}</span>
+      <button type="button" class="color-swatch-button" style="--stop-color:${escapeAttr(color)}" aria-label="Open color picker ${index + 1}" title="${escapeAttr(color.toUpperCase())}">
+        <span></span>
+      </button>
+      <div class="color-picker-popover" hidden>
+        <input type="color" class="color-picker-control" value="${escapeAttr(color)}" aria-label="Color ${index + 1}">
+        <div class="color-picker-presets">
+          ${colorPresets.map((preset) => `<button type="button" class="color-preset" style="background-color:${escapeAttr(preset)}" title="${escapeAttr(preset.toUpperCase())}" data-color-preset="${escapeAttr(preset)}"></button>`).join('')}
+        </div>
+      </div>
+      <input type="text" value="${escapeAttr(color.toUpperCase())}" aria-label="Hex color ${index + 1}" spellcheck="false">
+      <button type="button" class="danger-button" title="Remove color" ${colorMode !== 'gradient' || colorStops.length <= 1 ? 'disabled' : ''}>x</button>
+    `;
+    const swatchButton = row.querySelector('.color-swatch-button');
+    const picker = row.querySelector('.color-picker-control');
+    const hexInput = row.querySelector('input[type="text"]');
+    const popover = row.querySelector('.color-picker-popover');
+    const removeButton = row.querySelector('.danger-button');
+    row.addEventListener('click', (event) => {
+      if (!event.target.closest('.color-picker-popover')) setActiveColorStop(index);
+    });
+    swatchButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      setActiveColorStop(index);
+      toggleColorPicker(popover);
+    });
+    hexInput.addEventListener('focus', () => setActiveColorStop(index));
+    picker.addEventListener('input', () => {
+      activeColorStopIndex = index;
+      setColorStopValue(index, picker.value, row);
+    });
+    row.querySelectorAll('[data-color-preset]').forEach((button) => button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      setColorStopValue(index, button.dataset.colorPreset, row);
+    }));
+    hexInput.addEventListener('input', () => {
+      const normalized = normalizeHex(hexInput.value);
+      if (!normalized) return;
+      activeColorStopIndex = index;
+      updateColorStop(index, normalized, false);
+      syncColorStopRow(row, normalized);
+    });
+    removeButton.addEventListener('click', () => {
+      if (colorStops.length <= 1) return;
+      colorStops.splice(index, 1);
+      activeColorStopIndex = Math.min(activeColorStopIndex, colorStops.length - 1);
+      renderColorStops();
+      applyColorSyntaxToInput();
+    });
+    container.appendChild(row);
+  });
+  $('colorStopCount').textContent = colorMode === 'solid' ? 'Solid' : `${colorStops.length} ${colorStops.length === 1 ? 'stop' : 'stops'}`;
+}
+
+function toggleColorPicker(popover) {
+  const wasOpen = !popover.hidden;
+  document.querySelectorAll('.color-picker-popover').forEach((panel) => panel.hidden = true);
+  popover.hidden = wasOpen;
+}
+
+function renderFormatColorPresets() {
+  const container = $('formatColorPresets');
+  container.innerHTML = '';
+  colorPresets.forEach((color) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'color-preset';
+    button.title = color.toUpperCase();
+    button.style.backgroundColor = color;
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      setFormatColorValue(color);
+      applySelectedFormatColor();
+    });
+    container.appendChild(button);
+  });
+}
+
+function setFormatColorValue(color) {
+  const normalized = normalizeHex(color);
+  if (!normalized) return;
+  $('formatColorInput').value = normalized;
+  $('formatColorPickerControl').value = normalized;
+  $('formatColorSwatch').style.backgroundColor = normalized;
+}
+
+function applySelectedFormatColor() {
+  applyFormatColor($('formatColorPickerControl').value, pendingFormatColorSelection);
+  pendingFormatColorSelection = null;
+}
+
+function setActiveColorStop(index) {
+  if (colorMode === 'uncolored') return;
+  activeColorStopIndex = colorMode === 'solid' ? 0 : Math.min(index, colorStops.length - 1);
+  document.querySelectorAll('.color-stop-row').forEach((row, rowIndex) => row.classList.toggle('active', rowIndex === activeColorStopIndex));
+}
+
+function setColorStopValue(index, value, row) {
+  const normalized = normalizeHex(value);
+  if (!normalized) return;
+  activeColorStopIndex = index;
+  colorStops[index] = normalized;
+  syncColorStopRow(row, normalized);
+  applyColorSyntaxToInput();
+}
+
+function syncColorStopRow(row, color) {
+  row.querySelector('.color-swatch-button').style.setProperty('--stop-color', color);
+  row.querySelector('.color-swatch-button').title = color.toUpperCase();
+  row.querySelector('.color-picker-control').value = color;
+  row.querySelector('input[type="text"]').value = color.toUpperCase();
+}
+
+function updateColorStop(index, value, rerender = true) {
+  const normalized = normalizeHex(value);
+  if (!normalized) return;
+  colorStops[index] = normalized;
+  if (rerender) renderColorStops();
+  applyColorSyntaxToInput();
+}
+
+function renderColorOutputVisibility() {
+  $('view-colors').classList.toggle('output-hidden', !colorOutputVisible);
+  $('toggleColorOutputButton').classList.toggle('active', colorOutputVisible);
+}
+
+function applyColorSyntaxToInput() {
+  const input = $('colorText');
+  input.value = applyColorMode(input.value);
+  generateColor();
+}
+
+function applyColorMode(input) {
+  const normalized = normalizeColorLabInput(input);
+  const bracketed = readBracketedColorBody(normalized);
+  if (bracketed) {
+    return `<dark_gray>[${applyColorBody(bracketed)}<dark_gray>]`;
+  }
+
+  const body = stripColorTags(stripOuterColorTags(normalized));
+  return applyColorBody(body);
+}
+
+function applyColorBody(body) {
+  if (!body) return '';
+  const colors = colorStops.map((stop) => normalizeHex(stop)).filter(Boolean);
+  if (colorMode === 'uncolored' || !colors.length) return body;
+  if (colorMode === 'solid' || colors.length === 1) {
+    const color = colors[0];
+    return `<${color}>${body}</${color}>`;
+  }
+  return `<gradient:${colors.join(':')}>${body}</gradient>`;
+}
+
+function readBracketedColorBody(input) {
+  const value = String(input || '').trim();
+  const match = value.match(/^<dark_gray>\[(?:<gradient:[^>]+>|<#[0-9a-fA-F]{6}>)([\s\S]*?)(?:<\/gradient>|<\/#[0-9a-fA-F]{6}>)(?:<dark_gray>|<\/dark_gray>)\]$/i);
+  return match ? stripColorTags(match[1]) : '';
+}
+
+function normalizeColorLabInput(input) {
+  const value = String(input || '');
+  return hasMiniMessageTags(value) ? value : minecraftCodesToMiniMessage(value);
+}
+
+function syncControlsFromInput() {
+  const parsed = readOuterColorTags($('colorText').value);
+  if (!parsed) return;
+  colorMode = parsed.mode;
+  if (parsed.colors.length) colorStops = parsed.colors;
+  renderColorStops();
+}
+
+function readOuterColorTags(input) {
+  const value = String(input || '').trim();
+  const gradientMatch = value.match(/^<gradient:([^>]+)>[\s\S]*<\/gradient>$/i);
+  if (gradientMatch) {
+    const colors = gradientMatch[1].split(':').map(normalizeHex).filter(Boolean);
+    return { mode: colors.length > 1 ? 'gradient' : 'solid', colors };
+  }
+  const solidMatch = value.match(/^<#[0-9a-fA-F]{6}>[\s\S]*<\/#[0-9a-fA-F]{6}>$/i);
+  if (solidMatch) return { mode: 'solid', colors: [normalizeHex(value.slice(1, 8))] };
+  return { mode: 'uncolored', colors: [] };
+}
+
+function stripOuterColorTags(input) {
+  const value = String(input || '').trim();
+  const gradientMatch = value.match(/^<gradient:[^>]+>([\s\S]*)<\/gradient>$/i);
+  if (gradientMatch) return gradientMatch[1];
+  const solidMatch = value.match(/^<#[0-9a-fA-F]{6}>([\s\S]*)<\/#[0-9a-fA-F]{6}>$/i);
+  if (solidMatch) return solidMatch[1];
+  return value;
+}
+
+function stripColorTags(input) {
+  const colorNames = Object.keys(miniMessageColors).join('|');
+  const pattern = new RegExp(`</?(?:gradient:[^>]+|gradient|#[0-9a-fA-F]{6}|${colorNames})>`, 'gi');
+  return String(input || '').replace(pattern, '');
+}
+
+function hasMiniMessageTags(input) {
+  return /<\/?(?:gradient:[^>]+|reset|dark_gray|dark_grey|gray|grey|white|black|red|green|blue|yellow|gold|aqua|dark_red|dark_green|dark_blue|dark_aqua|dark_purple|light_purple|b|bold|i|italic|u|underlined|st|strikethrough|obf|obfuscated|#[0-9a-fA-F]{6})\b/i.test(input || '');
+}
+
+function minecraftCodesToMiniMessage(input) {
+  const chars = [...(input || '')];
+  const active = [];
+  let output = '';
+  const tagFor = { l: 'b', o: 'i', n: 'u', m: 'st', k: 'obf' };
+
+  const closeAll = () => {
+    while (active.length) output += `</${active.pop()}>`;
+  };
+
+  for (let i = 0; i < chars.length; i++) {
+    const code = readMinecraftCode(chars, i);
+    if (code) {
+      const raw = normalizeCodePrefix(code.raw).toLowerCase();
+      const next = raw[1];
+      if (next === 'r') {
+        closeAll();
+        output += '<reset>';
+      } else if (raw.startsWith('&#')) {
+        output += `<#${raw.slice(2)}>`;
+      } else if (raw.startsWith('&x')) {
+        output += `<#${raw.replace(/[&x]/gi, '')}>`;
+      } else if (raw.startsWith('<#')) {
+        output += raw;
+      } else if (legacyColors[next]) {
+        output += `<${legacyMiniMessageColors[next]}>`;
+      } else if (tagFor[next] && !active.includes(tagFor[next])) {
+        output += `<${tagFor[next]}>`;
+        active.push(tagFor[next]);
+      }
+      i += code.length - 1;
+      continue;
+    }
+    output += escapeMiniMessage(chars[i]);
+  }
+
+  closeAll();
+  return output;
 }
 
 function tokenizeMinecraftText(input) {
@@ -752,14 +1144,6 @@ function normalizeCodePrefix(code) {
   return code.startsWith('§') ? `&${code.slice(1)}` : code;
 }
 
-function formatColorPrefix(hex, format) {
-  const clean = hex.slice(1);
-  if (format === 'classic') return nearestLegacy(hex);
-  if (format === 'ampx') return `&x${[...clean].map((char) => `&${char}`).join('')}`;
-  if (format === 'sectionx') return `§x${[...clean].map((char) => `§${char}`).join('')}`;
-  if (format === 'minimessage-single') return `<#${clean}>`;
-  return `&#${clean}`;
-}
 
 function stripMinecraftCodes(input) {
   const chars = [...input];
@@ -779,33 +1163,77 @@ function escapeMiniMessage(value) {
   return String(value).replace(/[\\<>]/g, (char) => `\\${char}`);
 }
 
-function insertAtCursor(input, value) {
-  const start = input.selectionStart ?? input.value.length;
-  const end = input.selectionEnd ?? input.value.length;
-  input.value = `${input.value.slice(0, start)}${value}${input.value.slice(end)}`;
-  input.focus();
-  input.setSelectionRange(start + value.length, start + value.length);
+function applyFormatTag(tag) {
+  const input = $('colorText');
+  if (tag === 'reset') {
+    insertMiniMessageAtSelection(input, '<reset>', '');
+  } else {
+    insertMiniMessageAtSelection(input, `<${tag}>`, `</${tag}>`);
+  }
   generateColor();
 }
 
-function reverseVisibleText(input) {
-  return stripMinecraftCodes(input).split('').reverse().join('');
+function applyFormatColor(color, selection) {
+  const normalized = normalizeHex(color);
+  if (!normalized) return;
+  insertMiniMessageAtSelection($('colorText'), `<${normalized}>`, `</${normalized}>`, selection);
+  generateColor();
 }
 
-function gradient(start, end, steps) {
-  const a = hexToRgb(start);
-  const b = hexToRgb(end);
+function readTextSelection(input) {
+  return {
+    start: input.selectionStart ?? input.value.length,
+    end: input.selectionEnd ?? input.value.length
+  };
+}
+
+function insertMiniMessageAtSelection(input, openTag, closeTag, selection = readTextSelection(input)) {
+  const start = selection.start;
+  const end = selection.end;
+  const selected = input.value.slice(start, end);
+  const replacement = `${openTag}${selected}${closeTag}`;
+  input.value = `${input.value.slice(0, start)}${replacement}${input.value.slice(end)}`;
+  input.focus();
+  if (selected) {
+    input.setSelectionRange(start + openTag.length, start + openTag.length + selected.length);
+  } else {
+    input.setSelectionRange(start + openTag.length, start + openTag.length);
+  }
+}
+
+function normalizeHex(value) {
+  const clean = String(value || '').trim().replace(/^#/, '');
+  if (/^[0-9a-fA-F]{3}$/.test(clean)) {
+    return `#${[...clean].map((char) => `${char}${char}`).join('').toLowerCase()}`;
+  }
+  if (/^[0-9a-fA-F]{6}$/.test(clean)) return `#${clean.toLowerCase()}`;
+  return '';
+}
+
+function gradientStops(stops, steps) {
+  const colors = stops.map((stop) => normalizeHex(stop)).filter(Boolean);
+  if (!colors.length) return [];
+  if (colors.length === 1 || steps <= 1) return Array.from({ length: Math.max(1, steps) }, () => colors[0]);
+
+  const segmentCount = colors.length - 1;
   return Array.from({ length: steps }, (_, index) => {
-    const t = steps <= 1 ? 0 : index / (steps - 1);
+    const position = (index / (steps - 1)) * segmentCount;
+    const segment = Math.min(Math.floor(position), segmentCount - 1);
+    const local = position - segment;
+    const a = hexToRgb(colors[segment]);
+    const b = hexToRgb(colors[segment + 1]);
     return rgbToHex({
-      r: Math.round(a.r + (b.r - a.r) * t),
-      g: Math.round(a.g + (b.g - a.g) * t),
-      b: Math.round(a.b + (b.b - a.b) * t)
+      r: Math.round(a.r + (b.r - a.r) * local),
+      g: Math.round(a.g + (b.g - a.g) * local),
+      b: Math.round(a.b + (b.b - a.b) * local)
     });
   });
 }
 
 function minecraftToHtml(input) {
+  if (/<gradient:|<\/?(?:b|bold|i|italic|u|underlined|st|strikethrough|obf|#[0-9a-fA-F]{6})\b/i.test(input || '')) {
+    return miniMessageToHtml(input);
+  }
   let html = '';
   let color = '#eef4f8';
   const styles = new Set();
@@ -848,6 +1276,87 @@ function minecraftToHtml(input) {
   return html;
 }
 
+function miniMessageToHtml(input) {
+  const value = String(input || '');
+  const gradientPattern = /<gradient:([^>]+)>([\s\S]*?)<\/gradient>/ig;
+  let html = '';
+  let cursor = 0;
+  let match;
+
+  while ((match = gradientPattern.exec(value))) {
+    html += miniMessageSegmentToHtml(value.slice(cursor, match.index), null);
+    const colors = match[1].split(':').map(normalizeHex).filter(Boolean);
+    html += miniMessageSegmentToHtml(match[2], colors);
+    cursor = match.index + match[0].length;
+  }
+
+  if (cursor) {
+    html += miniMessageSegmentToHtml(value.slice(cursor), null);
+    return html;
+  }
+
+  return miniMessageSegmentToHtml(value, null);
+}
+
+function miniMessageSegmentToHtml(input, gradientColors) {
+  const chars = [...String(input || '')];
+  const styles = new Set();
+  let color = '#eef4f8';
+  const colorStack = [];
+  let html = '';
+  const visibleLength = stripMiniMessageTags(input).length;
+  const colors = gradientColors ? gradientStops(gradientColors, Math.max(1, visibleLength)) : [];
+  let colorIndex = 0;
+
+  for (let i = 0; i < chars.length; i++) {
+    if (chars[i] === '<') {
+      const end = chars.indexOf('>', i + 1);
+      if (end > i) {
+        const tag = chars.slice(i + 1, end).join('').trim().toLowerCase();
+        const closingTag = tag.startsWith('/') ? tag.slice(1) : '';
+        if (miniMessageColors[tag]) {
+          colorStack.push(color);
+          color = miniMessageColors[tag];
+        } else if (miniMessageColors[closingTag]) {
+          color = colorStack.pop() || '#eef4f8';
+        }
+        else if (tag === 'reset') {
+          color = '#eef4f8';
+          colorStack.length = 0;
+          styles.clear();
+        } else if (tag === 'b' || tag === 'bold') styles.add('l');
+        else if (tag === '/b' || tag === '/bold') styles.delete('l');
+        else if (tag === 'i' || tag === 'italic') styles.add('o');
+        else if (tag === '/i' || tag === '/italic') styles.delete('o');
+        else if (tag === 'u' || tag === 'underlined') styles.add('n');
+        else if (tag === '/u' || tag === '/underlined') styles.delete('n');
+        else if (tag === 'st' || tag === 'strikethrough') styles.add('m');
+        else if (tag === '/st' || tag === '/strikethrough') styles.delete('m');
+        else if (tag === 'obf' || tag === 'obfuscated') styles.add('k');
+        else if (tag === '/obf' || tag === '/obfuscated') styles.delete('k');
+        else if (/^#[0-9a-f]{6}$/.test(tag)) {
+          colorStack.push(color);
+          color = tag;
+        } else if (/^\/#[0-9a-f]{6}$/.test(tag)) {
+          color = colorStack.pop() || '#eef4f8';
+        }
+        i = end;
+        continue;
+      }
+    }
+
+    const nextColor = colors.length ? colors[Math.min(colorIndex, colors.length - 1)] : color;
+    html += `<span style="${styleAttr(nextColor, styles)}">${escapeHtml(chars[i])}</span>`;
+    colorIndex++;
+  }
+
+  return html;
+}
+
+function stripMiniMessageTags(input) {
+  return String(input || '').replace(/<[^>]+>/g, '');
+}
+
 function styleAttr(color, styles) {
   const declarations = [`color:${color}`];
   if (styles.has('l')) declarations.push('font-weight:800');
@@ -867,20 +1376,33 @@ const legacyColors = {
   c: '#ff5555', d: '#ff55ff', e: '#ffff55', f: '#ffffff'
 };
 
-function nearestLegacy(hex) {
-  const target = hexToRgb(hex);
-  let best = '&f';
-  let distance = Infinity;
-  Object.entries(legacyColors).forEach(([code, value]) => {
-    const rgb = hexToRgb(value);
-    const d = (target.r - rgb.r) ** 2 + (target.g - rgb.g) ** 2 + (target.b - rgb.b) ** 2;
-    if (d < distance) {
-      distance = d;
-      best = `&${code}`;
-    }
-  });
-  return best;
-}
+const legacyMiniMessageColors = {
+  0: 'black', 1: 'dark_blue', 2: 'dark_green', 3: 'dark_aqua',
+  4: 'dark_red', 5: 'dark_purple', 6: 'gold', 7: 'gray',
+  8: 'dark_gray', 9: 'blue', a: 'green', b: 'aqua',
+  c: 'red', d: 'light_purple', e: 'yellow', f: 'white'
+};
+
+const miniMessageColors = {
+  black: '#000000',
+  dark_blue: '#0000aa',
+  dark_green: '#00aa00',
+  dark_aqua: '#00aaaa',
+  dark_red: '#aa0000',
+  dark_purple: '#aa00aa',
+  gold: '#ffaa00',
+  gray: '#aaaaaa',
+  grey: '#aaaaaa',
+  dark_gray: '#555555',
+  dark_grey: '#555555',
+  blue: '#5555ff',
+  green: '#55ff55',
+  aqua: '#55ffff',
+  red: '#ff5555',
+  light_purple: '#ff55ff',
+  yellow: '#ffff55',
+  white: '#ffffff'
+};
 
 function hexToRgb(hex) {
   const clean = hex.replace('#', '');
@@ -1037,8 +1559,9 @@ function applyPayload(payload) {
     throw new Error('Missing data.tags array');
   }
 
-  pushHistory();
   tags = importedTags;
+  history = [];
+  establishTagBaseline(tags);
   if (Array.isArray(payload.data?.categories)) {
     categories.splice(0, categories.length, ...payload.data.categories);
   }
@@ -1153,6 +1676,9 @@ $('closeApplyModal').addEventListener('click', () => {
   $('applyModal').classList.remove('active');
   $('applyModal').setAttribute('aria-hidden', 'true');
 });
+
+establishTagBaseline(tags);
+generateColor();
 
 if (hasSessionLink) {
   render();

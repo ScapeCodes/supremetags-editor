@@ -88,7 +88,7 @@
         </button>
         <button class="nav-item" data-view="plugin">
           <span data-icon="info"></span>
-          <span>Plugin Info</span>
+          <span>Project Info</span>
         </button>
       </nav>
 
@@ -96,7 +96,7 @@
         <span class="status-dot" id="sidebarStatusDot"></span>
         <div>
           <strong id="sidebarPluginTitle">SupremeTags</strong>
-          <span id="sidebarPluginVersion">v2.2.9 · up to date</span>
+          <span id="sidebarPluginVersion">v3.0.0 · up to date</span>
         </div>
       </div>
     </aside>
@@ -110,10 +110,6 @@
         <div class="topbar-actions">
           <button class="icon-button" id="undoButton" title="Undo">
             <span data-icon="undo"></span>
-          </button>
-          <button class="ghost-button" id="importButton">
-            <span data-icon="upload"></span>
-            Import
           </button>
           <button class="primary-button" id="applyChangesButton">
             <span data-icon="download"></span>
@@ -184,12 +180,23 @@
               <div class="preview-pill" id="headerPreview"></div>
             </div>
 
-            <div class="tab-strip" role="tablist">
-              <button class="tab-button active" data-tab="basic">Basic</button>
-              <button class="tab-button" data-tab="display">Display</button>
-              <button class="tab-button" data-tab="voucher">Voucher</button>
-              <button class="tab-button" data-tab="variants">Variants</button>
-              <button class="tab-button" data-tab="requirements">Requirements</button>
+            <div class="details-tab-row">
+              <div class="tab-strip" role="tablist">
+                <button class="tab-button active" data-tab="basic">Basic</button>
+                <button class="tab-button" data-tab="display">Display</button>
+                <button class="tab-button" data-tab="voucher">Voucher</button>
+                <button class="tab-button" data-tab="variants">Variants</button>
+                <button class="tab-button" data-tab="requirements">Requirements</button>
+              </div>
+              <details class="tag-actions-menu">
+                <summary class="icon-button" aria-label="Tag actions"><span class="ellipsis-icon" aria-hidden="true"></span></summary>
+                <div class="tag-action-buttons">
+                  <button class="menu-action-button" id="duplicateTagButton" type="button">Duplicate</button>
+                  <button class="menu-action-button" id="resetTagButton" type="button">Reset Changes</button>
+                  <div class="menu-divider"></div>
+                  <button class="menu-action-button danger-action-button" id="deleteTagButton" type="button">Delete</button>
+                </div>
+              </details>
             </div>
 
             <form class="form-grid tab-panel active" id="tab-basic">
@@ -256,51 +263,83 @@
 
       <section class="view" id="view-colors">
         <div class="color-lab">
-          <section>
-            <h2>Color Lab</h2>
-            <p>Write normal Minecraft color codes, preview them live, then generate gradients without losing formatting.</p>
-            <label>Text<textarea id="colorText" rows="5">&amp;8[&amp;lSupreme&amp;8]</textarea></label>
+          <section class="color-workbench">
+            <div class="color-head">
+              <div>
+                <p class="eyebrow">MiniMessage</p>
+                <h2>Color Lab</h2>
+              </div>
+              <button class="secondary-button" id="toggleColorOutputButton" type="button">
+                <span data-icon="terminal"></span>
+                Output
+              </button>
+            </div>
+            <label>Input text<textarea id="colorText" rows="5"><dark_gray>[<gradient:#ff4d8d:#f6c453:#55d6be:#5d7cff:#b45cff>SupremeTags</gradient><dark_gray>]</textarea></label>
+            <p class="minimessage-hint">
+              MiniMessage also supports interactive
+              <a href="https://docs.papermc.io/adventure/minimessage/format/#click" target="_blank" rel="noreferrer">click</a>
+              and
+              <a href="https://docs.papermc.io/adventure/minimessage/format/#hover" target="_blank" rel="noreferrer">hover</a>
+              tags.
+            </p>
             <div class="format-tools" aria-label="Formatting shortcuts">
-              <button type="button" data-format-code="&amp;l"><b>B</b></button>
-              <button type="button" data-format-code="&amp;o"><i>I</i></button>
-              <button type="button" data-format-code="&amp;n"><u>U</u></button>
-              <button type="button" data-format-code="&amp;m"><s>S</s></button>
-              <button type="button" data-format-code="&amp;r">Reset</button>
+              <button type="button" data-format-tag="bold" title="Bold"><b>B</b></button>
+              <button type="button" data-format-tag="italic" title="Italic"><i>I</i></button>
+              <button type="button" data-format-tag="underlined" title="Underline"><u>U</u></button>
+              <button type="button" data-format-tag="strikethrough" title="Strikethrough"><s>S</s></button>
+              <button type="button" data-format-tag="reset" title="Reset">Reset</button>
+              <div class="format-color-picker">
+                <button type="button" id="formatColorButton" class="format-color-button" title="Color" aria-label="Color">
+                  <span id="formatColorSwatch"></span>
+                </button>
+                <input type="color" id="formatColorInput" class="format-color-input" value="#ffffff" tabindex="-1" aria-label="Text color">
+                <div class="color-picker-popover format-color-popover" id="formatColorPopover" hidden>
+                  <input type="color" id="formatColorPickerControl" class="color-picker-control" value="#ffffff" aria-label="Text color">
+                  <div class="color-picker-presets" id="formatColorPresets"></div>
+                </div>
+              </div>
             </div>
-            <div class="color-row">
-              <label>Start<input id="colorStart" type="color" value="#f6c453"></label>
-              <label>End<input id="colorEnd" type="color" value="#55d6be"></label>
-              <label>Color step<input id="colorStep" type="number" min="1" max="32" value="1"></label>
-              <label class="switch-row">Trim spaces<input id="colorTrimSpaces" type="checkbox" checked><span></span></label>
+            <div class="color-mode-tabs" aria-label="Color type">
+              <button type="button" class="active" data-color-mode="gradient"><span data-icon="palette"></span>Gradient</button>
+              <button type="button" data-color-mode="solid"><span data-icon="droplet"></span>Solid</button>
+              <button type="button" data-color-mode="uncolored"><span data-icon="ban"></span>Uncolored</button>
             </div>
-            <div class="color-row">
-              <label>Output format<select id="colorFormat">
-                <option value="legacy">Minecraft hex (&amp;#rrggbb)</option>
-                <option value="ampx">Legacy hex (&amp;x&amp;r&amp;r&amp;g&amp;g&amp;b&amp;b)</option>
-                <option value="sectionx">Section hex (§x§r§r§g§g§b§b)</option>
-                <option value="minimessage">MiniMessage gradient</option>
-                <option value="minimessage-single">MiniMessage hex (&lt;#rrggbb&gt;)</option>
-                <option value="classic">Nearest legacy (&amp;a)</option>
-              </select></label>
-              <label>Prefix / suffix<input id="colorWrapper" placeholder="/nick $t"></label>
-            </div>
-            <div class="command-actions">
-              <button class="secondary-button" id="swapColorsButton" type="button"><span data-icon="swap"></span>Swap</button>
-              <button class="secondary-button" id="reverseTextButton" type="button"><span data-icon="reverse"></span>Reverse</button>
-              <button class="primary-button" id="applyColorToTagButton" type="button"><span data-icon="tag"></span>Use on selected tag</button>
+            <div class="color-stop-panel">
+              <div class="color-stop-head">
+                <div>
+                  <strong>Colors</strong>
+                  <span id="colorStopCount">2 stops</span>
+                </div>
+                <div class="stepper-actions">
+                  <button class="icon-button" id="removeColorStopButton" type="button" title="Remove color">
+                    <span data-icon="minus"></span>
+                  </button>
+                  <button class="icon-button" id="addColorStopButton" type="button" title="Add color">
+                    <span data-icon="plus"></span>
+                  </button>
+                </div>
+              </div>
+              <div class="color-stops" id="colorStops"></div>
             </div>
           </section>
           <section class="output-panel">
-            <div class="preview-box tall">
-              <span>Typed code preview</span>
-              <strong id="typedColorPreview"></strong>
+            <div class="output-head">
+              <div>
+                <p class="eyebrow">MiniMessage</p>
+                <h2>Output</h2>
+              </div>
+              <button class="secondary-button" id="copyColorButton" type="button"><span data-icon="copy"></span>Copy raw</button>
             </div>
-            <div class="preview-box tall">
-              <span>Generated preview</span>
-              <strong id="colorPreview"></strong>
+            <div class="minimessage-preview">
+              <div class="preview-server-row">
+                <div class="server-icon">ST</div>
+                <div>
+                  <span>SupremeTags</span>
+                  <strong id="colorPreview"></strong>
+                </div>
+              </div>
             </div>
-            <label>Output<textarea id="colorOutput" rows="6" readonly></textarea></label>
-            <button class="secondary-button" id="copyColorButton"><span data-icon="copy"></span>Copy</button>
+            <label>Raw MiniMessage<textarea id="colorOutput" rows="7" readonly title="Click to copy raw MiniMessage"></textarea></label>
           </section>
         </div>
       </section>
@@ -310,20 +349,24 @@
           <section class="plugin-status-panel">
             <div class="plugin-status-head">
               <div>
-                <p class="eyebrow">Server plugin</p>
-                <h2>SupremeTags status</h2>
+                <p class="eyebrow">Project info</p>
+                <h2>SupremeTags project</h2>
               </div>
               <span class="version-state" id="pluginVersionState">Checking</span>
             </div>
 
             <div class="version-grid">
               <div>
-                <span>Installed version</span>
-                <strong id="installedVersion">2.2.9</strong>
+                <span>Plugin version</span>
+                <strong id="installedVersion">3.0.0</strong>
               </div>
               <div>
                 <span>Latest Spigot version</span>
-                <strong id="latestVersion">2.2.9</strong>
+                <strong id="latestVersion">3.0.0</strong>
+              </div>
+              <div>
+                <span>Editor version</span>
+                <strong id="editorVersion">2026.1</strong>
               </div>
               <div>
                 <span>Resource</span>
@@ -341,12 +384,17 @@
           </section>
 
           <section class="plugin-details-panel">
-            <h3>Runtime details</h3>
+            <h3>Project stats</h3>
             <div class="info-list">
               <div><span>Minecraft server</span><strong id="serverVersion">Paper 26.2</strong></div>
               <div><span>Storage mode</span><strong id="storageMode">File tags</strong></div>
+              <div><span>Session</span><strong id="editorSessionState">Local preview</strong></div>
               <div><span>Tags loaded</span><strong id="pluginTagsLoaded">3</strong></div>
+              <div><span>Variants</span><strong id="editorVariantCount">0</strong></div>
+              <div><span>Requirements</span><strong id="editorRequirementCount">0</strong></div>
               <div><span>Categories loaded</span><strong id="pluginCategoriesLoaded">4</strong></div>
+              <div><span>Rarities loaded</span><strong id="editorRarityCount">4</strong></div>
+              <div><span>Undo steps</span><strong id="editorUndoCount">0</strong></div>
               <div><span>Last checked</span><strong id="versionCheckedAt">Local preview</strong></div>
             </div>
           </section>
