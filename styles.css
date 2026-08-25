@@ -1343,7 +1343,7 @@ label {
   top: calc(100% + 6px);
   right: 0;
   display: grid;
-  min-width: 176px;
+  min-width: 198px;
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1354,6 +1354,7 @@ label {
 .menu-action-button {
   display: flex;
   align-items: center;
+  gap: 10px;
   width: 100%;
   min-height: 38px;
   padding: 0 12px;
@@ -1362,6 +1363,13 @@ label {
   color: var(--text);
   cursor: pointer;
   text-align: left;
+  white-space: nowrap;
+}
+
+.menu-action-button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
 }
 
 .menu-action-button:hover {
