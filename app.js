@@ -25,6 +25,7 @@ document.querySelectorAll('[data-icon]').forEach((node) => {
   node.innerHTML = icons[node.dataset.icon] || '';
 });
 
+const DEFAULT_API_URL = 'https://supremetags-editor-api.noscapedev.workers.dev';
 const categories = ['default', 'holiday', 'achievements', 'donator'];
 const rarities = ['common', 'uncommon', 'rare', 'legendary'];
 const editorInfo = {
@@ -38,68 +39,67 @@ let colorStops = ['#ff4d8d', '#f6c453', '#55d6be', '#5d7cff', '#b45cff'];
 const colorPresets = ['#ff4d8d', '#f6c453', '#55d6be', '#5d7cff', '#b45cff', '#ff7ab6', '#f8f0c5', '#d8f3ec', '#d9e8f8', '#e7dbff', '#05070a', '#555555', '#aaaaaa', '#ffffff'];
 let colorMode = 'gradient';
 let activeColorStopIndex = 0;
-let colorOutputVisible = true;
 let pendingFormatColorSelection = null;
 const routeSession = parseSessionRoute();
 const activeSession = {
   id: routeSession.id,
   token: routeSession.token,
-  apiUrl: routeSession.apiUrl || window.ST_EDITOR_API_URL || ''
+  apiUrl: routeSession.apiUrl || window.ST_EDITOR_API_URL || DEFAULT_API_URL
 };
-const hasSessionLink = Boolean(activeSession.id && activeSession.token && activeSession.apiUrl);
+const hasSessionLink = Boolean(activeSession.token && activeSession.apiUrl);
 
 let tags = [
   {
     identifier: 'hexsupport',
-    tag: ['&8[&#afe4a4&lHex&#bc43fd&lColor&8]'],
+    tag: ['<reset><dark_gray>[<bold><gradient:#afe4a4:#bc43fd>HexColor</gradient><reset><dark_gray>]'],
     permission: 'supremetags.tag.hex',
     category: 'default',
     rarity: 'common',
     order: 1,
     withdrawable: true,
-    description: ['Supports normal and hex colors'],
-    displayName: '&7Tag: %tag%',
+    description: ['<reset><gray>Supports MiniMessage colors'],
+    displayName: '<reset><gray>Tag: %tag%',
     displayItem: 'NAME_TAG',
     customModelData: 0,
     economy: { enabled: false, type: 'CUSTOM', amount: 200, takeCommand: 'eco take %player% %amount%', condition: '%vault_eco_balance% >= %amount%' },
-    voucher: { material: 'NAME_TAG', displayName: '%tag% &f&lVoucher', customModelData: 0, glow: true, lore: ['&7&m-----------------------------', '&eClick to equip!', '&7&m-----------------------------'] },
+    voucher: { material: 'NAME_TAG', displayName: '%tag% <reset><white><bold>Voucher', customModelData: 0, glow: true, lore: ['<reset><gray><strikethrough>-----------------------------', '<reset><yellow>Click to equip!', '<reset><gray><strikethrough>-----------------------------'] },
     variants: [],
     requirements: { enabled: true, persistUnlock: true, mode: 'all', list: [{ name: 'playtime', type: 'placeholder', value: '1728000' }] }
   },
   {
     identifier: 'santa',
-    tag: ['&8[&c&lSanta&8]'],
+    tag: ['<reset><dark_gray>[<bold><gradient:#ff3131:#ffffff>Santa</gradient><reset><dark_gray>]'],
     permission: 'supremetags.tag.santa',
     category: 'holiday',
     rarity: 'common',
     order: 2,
     withdrawable: false,
-    description: ['ho ho hooooooo!'],
-    displayName: '&7Tag: %tag%',
+    description: ['<reset><gray>ho ho hooooooo!'],
+    displayName: '<reset><gray>Tag: %tag%',
     displayItem: 'NAME_TAG',
     customModelData: 0,
     economy: { enabled: false, type: 'VAULT', amount: 200, takeCommand: '', condition: '' },
-    voucher: { material: 'NAME_TAG', displayName: '&8[&c&lSanta&8] &f&lVoucher', customModelData: 0, glow: true, lore: ['&7&m-----------------------------', '&eClick to equip!', '&7&m-----------------------------'] },
-    variants: [{ identifier: 'white-santa', tag: '&f[&cSanta&f]', permission: 'supremetags.tag.santa.white' }],
+    voucher: { material: 'NAME_TAG', displayName: '<reset><dark_gray>[<reset><red><bold>Santa<reset><dark_gray>] <reset><white><bold>Voucher', customModelData: 0, glow: true, lore: ['<reset><gray><strikethrough>-----------------------------', '<reset><yellow>Click to equip!', '<reset><gray><strikethrough>-----------------------------'] },
+    variants: [{ identifier: 'white-santa', tag: '<reset><white>[<reset><red>Santa<reset><white>]', permission: 'supremetags.tag.santa.white' }],
     requirements: { enabled: false, persistUnlock: false, mode: 'all', list: [] }
   },
   {
     identifier: 'vipplus',
-    tag: ['&a[VIP+]'],
+    tag: ['<reset><dark_gray>[<bold><gradient:#00ff87:#00c3ff>VIP+</gradient><reset><dark_gray>]'],
     permission: 'supremetags.tag.vip',
     category: 'donator',
     rarity: 'rare',
     order: 4,
     withdrawable: false,
-    description: ['VIP donator tag!'],
-    displayName: '&7Tag: %tag%',
+    description: ['<reset><green>VIP donator tag!'],
+    displayName: '<reset><gray>Tag: %tag%',
     displayItem: 'NAME_TAG',
     customModelData: 0,
     economy: { enabled: true, type: 'VAULT', amount: 500, takeCommand: '', condition: '' },
-    voucher: { material: 'NAME_TAG', displayName: '&a[VIP+] &f&lVoucher', customModelData: 0, glow: true, lore: ['&7&m-----------------------------', '&eClick to equip!', '&7&m-----------------------------'] },
+    voucher: { material: 'NAME_TAG', displayName: '<reset><green>[VIP+] <reset><white><bold>Voucher', customModelData: 0, glow: true, lore: ['<reset><gray><strikethrough>-----------------------------', '<reset><yellow>Click to equip!', '<reset><gray><strikethrough>-----------------------------'] },
     variants: [
-      { identifier: 'vipplus_blue', tag: '&a[VIP&b+&a]', permission: 'supremetags.tag.vip.blue' },
-      { identifier: 'vipplus_red', tag: '&a[VIP&c+&a]', permission: 'supremetags.tag.vip.red' }
+      { identifier: 'vipplus_blue', tag: '<reset><green>[VIP<aqua>+<green>]', permission: 'supremetags.tag.vip.blue' },
+      { identifier: 'vipplus_red', tag: '<reset><green>[VIP<red>+<green>]', permission: 'supremetags.tag.vip.red' }
     ],
     requirements: { enabled: false, persistUnlock: false, mode: 'all', list: [] }
   }
@@ -126,7 +126,7 @@ function normalizeTag(tag) {
   tag.order = Number(tag.order || 0);
   tag.withdrawable = Boolean(tag.withdrawable);
   tag.rarity = tag.rarity || rarities[0] || 'common';
-  tag.displayName = tag.displayName || '&7Tag: %tag%';
+  tag.displayName = tag.displayName || '<reset><gray>Tag: %tag%';
   tag.displayItem = tag.displayItem || 'NAME_TAG';
   tag.customModelData = Number(tag.customModelData || 0);
   tag.effects = Array.isArray(tag.effects) ? tag.effects : [];
@@ -141,8 +141,8 @@ function normalizeTag(tag) {
   };
   tag.voucher = {
     material: tag.voucher?.material || 'NAME_TAG',
-    displayName: tag.voucher?.displayName || '%tag% &f&lVoucher',
-    lore: Array.isArray(tag.voucher?.lore) ? tag.voucher.lore : ['&7&m-----------------------------', '&eClick to equip!', '&7&m-----------------------------'],
+    displayName: tag.voucher?.displayName || '%tag% <reset><white><bold>Voucher',
+    lore: Array.isArray(tag.voucher?.lore) ? tag.voucher.lore : ['<reset><gray><strikethrough>-----------------------------', '<reset><yellow>Click to equip!', '<reset><gray><strikethrough>-----------------------------'],
     customModelData: Number(tag.voucher?.customModelData || 0),
     glow: tag.voucher?.glow !== false
   };
@@ -164,10 +164,10 @@ function normalizeVariant(variant) {
     description: Array.isArray(variant.description) ? variant.description : [],
     rarity: variant.rarity || '',
     unlockedMaterial: variant.unlockedMaterial || 'NAME_TAG',
-    unlockedDisplayName: variant.unlockedDisplayName || '&7Variant: %tag%',
+    unlockedDisplayName: variant.unlockedDisplayName || '<reset><gray>Variant: %tag%',
     unlockedCustomModelData: Number(variant.unlockedCustomModelData || 0),
     lockedMaterial: variant.lockedMaterial || 'BARRIER',
-    lockedDisplayName: variant.lockedDisplayName || '&cLocked Variant: %tag%',
+    lockedDisplayName: variant.lockedDisplayName || '<reset><red>Locked Variant: %tag%',
     lockedCustomModelData: Number(variant.lockedCustomModelData || 0)
   };
 }
@@ -547,7 +547,7 @@ $('addRequirementButton').addEventListener('click', () => updateSelected((tag) =
   name: 'new-rule',
   type: 'permission',
   permission: tag.permission,
-  display: '&f- &7Required permission'
+  display: '<reset><white>- <gray>Required permission'
 }))));
 
 document.querySelectorAll('.nav-item').forEach((button) => {
@@ -580,7 +580,7 @@ $('newTagButton').addEventListener('click', () => {
   const next = `new_tag_${tags.length + 1}`;
   tags.push({
     identifier: next,
-    tag: ['&7[New Tag]'],
+    tag: ['<reset><gray>[New Tag]'],
     permission: `supremetags.tag.${next}`,
     groups: [],
     category: 'default',
@@ -588,14 +588,14 @@ $('newTagButton').addEventListener('click', () => {
     order: tags.length + 1,
     withdrawable: true,
     description: ['New tag description'],
-    displayName: '&7Tag: %tag%',
+    displayName: '<reset><gray>Tag: %tag%',
     displayItem: 'NAME_TAG',
     customModelData: 0,
     effects: [],
     abilities: [],
     customPlaceholders: {},
     economy: { enabled: false, type: 'VAULT', amount: 0, takeCommand: '', condition: '' },
-    voucher: { material: 'NAME_TAG', displayName: '%tag% &f&lVoucher', customModelData: 0, glow: true, lore: ['&7&m-----------------------------', '&eClick to equip!', '&7&m-----------------------------'] },
+    voucher: { material: 'NAME_TAG', displayName: '%tag% <reset><white><bold>Voucher', customModelData: 0, glow: true, lore: ['<reset><gray><strikethrough>-----------------------------', '<reset><yellow>Click to equip!', '<reset><gray><strikethrough>-----------------------------'] },
     variants: [],
     requirements: { enabled: false, persistUnlock: false, mode: 'all', list: [] }
   });
@@ -762,7 +762,6 @@ $('applyChangesButton').addEventListener('click', async () => {
 });
 
 renderColorStops();
-renderColorOutputVisibility();
 $('colorText').addEventListener('input', () => {
   generateColor();
 });
@@ -808,10 +807,6 @@ $('removeColorStopButton').addEventListener('click', () => {
   activeColorStopIndex = Math.min(activeColorStopIndex, colorStops.length - 1);
   renderColorStops();
   applyColorSyntaxToInput();
-});
-$('toggleColorOutputButton').addEventListener('click', () => {
-  colorOutputVisible = !colorOutputVisible;
-  renderColorOutputVisibility();
 });
 $('copyColorButton').addEventListener('click', copyColorOutput);
 document.addEventListener('click', (event) => {
@@ -978,11 +973,6 @@ function updateColorStop(index, value, rerender = true) {
   colorStops[index] = normalized;
   if (rerender) renderColorStops();
   applyColorSyntaxToInput();
-}
-
-function renderColorOutputVisibility() {
-  $('view-colors').classList.toggle('output-hidden', !colorOutputVisible);
-  $('toggleColorOutputButton').classList.toggle('active', colorOutputVisible);
 }
 
 function applyColorSyntaxToInput() {
@@ -1476,13 +1466,22 @@ function parseSessionRoute() {
 }
 
 async function loadSessionDraft() {
-  if (!activeSession.id || !activeSession.token || !activeSession.apiUrl) {
+  if (!activeSession.token || !activeSession.apiUrl) {
     showInvalidSession();
     return;
   }
 
   try {
     const api = activeSession.apiUrl.replace(/\/$/, '');
+    if (!activeSession.id) {
+      const resolveResponse = await fetch(`${api}/sessions/resolve?token=${encodeURIComponent(activeSession.token)}`, { cache: 'no-store' });
+      if (!resolveResponse.ok) {
+        throw new Error(resolveResponse.status === 404 ? 'Session was not found or has expired.' : `HTTP ${resolveResponse.status}`);
+      }
+      const resolved = await resolveResponse.json();
+      activeSession.id = resolved.id;
+    }
+
     const response = await fetch(`${api}/sessions/${encodeURIComponent(activeSession.id)}?token=${encodeURIComponent(activeSession.token)}`);
     if (response.status === 410) {
       showInvalidSession('This editor session has already been applied or has expired. Create a new session with /tags editor web.');
