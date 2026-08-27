@@ -32,7 +32,8 @@ body {
 }
 
 .marketing-page,
-.downloads-page {
+.downloads-page,
+.wiki-page {
   background: #080d12;
 }
 
@@ -94,6 +95,7 @@ body {
 
 .hero-section,
 .feature-strip,
+.preview-gallery,
 .downloads-section,
 .site-footer {
   width: calc(100% - 36px);
@@ -252,15 +254,18 @@ body {
 }
 
 .rank.owner {
+  color: white;
   background: var(--gold);
 }
 
 .rank.vip {
+  color: white;
   background: var(--mint);
 }
 
 .rank.mvp {
-  background: var(--blue);
+  color: white;
+  background: #F53307;
 }
 
 .editor-mini {
@@ -330,6 +335,171 @@ body {
   line-height: 1.5;
 }
 
+.preview-gallery {
+  padding: 52px 0 76px;
+}
+
+.section-heading {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+  margin-bottom: 24px;
+}
+
+.section-heading h2 {
+  font-size: 34px;
+  line-height: 1.08;
+}
+
+.preview-grid-home {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.preview-shot {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.preview-shot-large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.preview-image-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(246, 196, 83, .16), rgba(73, 207, 162, .1)),
+    #0d1218;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.preview-image-button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.preview-shot img {
+  display: block;
+  width: 100%;
+  height: clamp(180px, 21vw, 260px);
+  object-fit: contain;
+}
+
+.preview-shot-large img {
+  height: clamp(300px, 34vw, 460px);
+}
+
+.preview-shot figcaption {
+  display: grid;
+  gap: 5px;
+}
+
+.preview-shot strong {
+  font-size: 16px;
+}
+
+.preview-shot span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.lightbox-open {
+  overflow: hidden;
+}
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.image-lightbox[aria-hidden="false"] {
+  display: flex;
+}
+
+.image-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(2, 6, 10, .82);
+  cursor: zoom-out;
+}
+
+.image-lightbox-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+  width: min(1180px, 96vw);
+  max-height: 92vh;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0d1218;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+}
+
+.image-lightbox-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.image-lightbox-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.image-lightbox-close:hover {
+  border-color: rgba(246, 196, 83, .55);
+}
+
+.image-lightbox-close svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.image-lightbox-panel img {
+  display: block;
+  width: 100%;
+  max-height: calc(92vh - 86px);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: #05080c;
+  object-fit: contain;
+}
+
 .ai-disclosure {
   width: calc(100% - 36px);
   max-width: 760px;
@@ -360,32 +530,117 @@ body {
 }
 
 .download-hero {
-  padding: 56px max(24px, calc((100vw - 1180px) / 2)) 54px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
+  align-items: center;
+  gap: 32px;
+  min-height: 460px;
+  padding: 68px max(24px, calc((100vw - 1180px) / 2)) 74px;
   background:
-    linear-gradient(90deg, rgba(246, 196, 83, .96), rgba(222, 155, 43, .94)),
+    linear-gradient(90deg, rgba(8, 13, 18, .97) 0%, rgba(8, 13, 18, .88) 50%, rgba(8, 13, 18, .68) 100%),
     url("https://assets.badlion.net/blog/minecraft-backgrounds/minecraft-mods-back.webp") center / cover no-repeat;
-  color: #160f04;
 }
 
-.download-hero div {
-  max-width: 820px;
-}
-
-.download-hero .eyebrow,
-.download-hero p {
-  color: #2f2108;
+.download-hero-copy {
+  min-width: 0;
+  max-width: 690px;
 }
 
 .download-hero h1 {
-  margin-bottom: 10px;
-  color: #100b03;
-  font-size: 44px;
+  max-width: 12ch;
+  margin-bottom: 16px;
+  font-size: 64px;
+  line-height: .96;
 }
 
 .download-hero p {
+  max-width: 660px;
   margin-bottom: 0;
-  font-size: 17px;
+  color: #c4d1d9;
+  font-size: 18px;
   line-height: 1.55;
+}
+
+.download-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.download-hero-actions a,
+.download-section-head a {
+  text-decoration: none;
+}
+
+.download-quick-card,
+.release-panel,
+.download-alert,
+.download-steps,
+.download-sidebar section {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(18, 24, 32, .94);
+  box-shadow: var(--shadow);
+}
+
+.download-quick-card {
+  width: 100%;
+  max-width: 100%;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.download-quick-card .release-badge {
+  margin-bottom: 16px;
+}
+
+.download-quick-card h2 {
+  margin-bottom: 12px;
+  font-size: 48px;
+  line-height: 1;
+}
+
+.release-intro,
+.download-quick-card p {
+  color: #c5d0d8;
+  line-height: 1.55;
+}
+
+.release-intro strong,
+.download-quick-card strong {
+  color: var(--text);
+}
+
+.download-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 22px 0 0;
+}
+
+.download-meta div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.download-meta dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.download-meta dd {
+  margin: 5px 0 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .download-hero h1,
@@ -394,18 +649,23 @@ body {
 .release-intro,
 .download-package h3,
 .download-package p,
-.download-sidebar li {
+.download-sidebar li,
+.download-steps li {
   overflow-wrap: anywhere;
+}
+
+.download-page-layout,
+.download-details {
+  width: calc(100% - 36px);
+  max-width: 1180px;
+  margin: 0 auto;
 }
 
 .download-page-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 350px);
   gap: 18px;
-  width: calc(100% - 36px);
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 16px 0 76px;
+  padding: 28px 0 32px;
 }
 
 .download-main {
@@ -414,96 +674,71 @@ body {
   min-width: 0;
 }
 
+.release-panel,
+.download-steps,
+.download-sidebar section {
+  padding: 22px;
+}
+
 .download-alert {
   display: grid;
-  grid-template-columns: 22px 1fr;
+  grid-template-columns: 24px 1fr;
   gap: 14px;
   padding: 18px;
-  border-left: 4px solid var(--gold);
-  border-radius: 4px;
-  background: rgba(104, 36, 17, .74);
+  border-color: rgba(246, 196, 83, .34);
+  background: rgba(246, 196, 83, .08);
+}
+
+.download-alert [data-icon] {
+  color: var(--gold);
 }
 
 .download-alert p {
   margin: 6px 0 0;
-  color: #f1d8c8;
+  color: #d5c9b0;
   line-height: 1.5;
-}
-
-.download-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-height: 38px;
-  padding: 4px;
-  border-radius: 4px;
-  background: #12161b;
-}
-
-.download-tabs button {
-  min-height: 30px;
-  border-radius: 3px;
-  background: transparent;
-  color: #aeb9c3;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.download-tabs button.active {
-  background: #2a2e34;
-  color: var(--text);
-}
-
-.download-tabs button:disabled {
-  color: #59636e;
-  cursor: not-allowed;
-}
-
-.release-intro {
-  margin: 0;
-  color: #c5d0d8;
-  line-height: 1.55;
-}
-
-.release-intro strong {
-  color: var(--text);
 }
 
 .download-section-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 14px;
 }
 
 .download-section-head h2 {
   margin: 0;
-  font-size: 28px;
-}
-
-.download-section-head a {
-  text-decoration: none;
-}
-
-.download-package {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 14px;
-  padding: 20px 14px;
-  border-radius: 8px;
-  background: #050607;
-  box-shadow: var(--shadow);
+  font-size: 30px;
 }
 
 #releasePackages {
   display: grid;
-  gap: 14px;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.download-package {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.download-package.stable-release {
+  border-color: rgba(85, 214, 190, .34);
+  background:
+    linear-gradient(90deg, rgba(85, 214, 190, .09), rgba(13, 18, 24, .96) 38%),
+    #0d1218;
 }
 
 .download-package.coming-soon {
-  border: 1px solid var(--line-soft);
-  background: rgba(5, 6, 7, .58);
+  background: rgba(13, 18, 24, .56);
 }
 
 .download-package.coming-soon h3,
@@ -512,97 +747,134 @@ body {
   opacity: .72;
 }
 
-.package-select input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.package-select span {
+.package-mark {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  border: 1px solid #3a424c;
-  border-radius: 5px;
-  background: #252a32;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(246, 196, 83, .36);
+  border-radius: 8px;
+  background: rgba(246, 196, 83, .1);
+  color: var(--gold);
 }
 
-.package-select input:checked + span::before {
-  content: "";
-  width: 10px;
-  height: 6px;
-  border-left: 2px solid var(--gold);
-  border-bottom: 2px solid var(--gold);
-  transform: rotate(-45deg) translateY(-1px);
+.package-mark[data-icon] {
+  width: 42px;
+  height: 42px;
+}
+
+.package-mark svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
 }
 
 .download-package h3 {
-  margin-bottom: 8px;
-  color: var(--blue);
+  margin: 0 0 8px;
+  color: var(--text);
   font-size: 18px;
+  line-height: 1.2;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .download-package small {
   margin-left: 6px;
   padding: 3px 7px;
   border-radius: 999px;
-  background: rgba(246, 196, 83, .18);
-  color: var(--gold);
+  background: rgba(85, 214, 190, .14);
+  color: var(--mint);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .download-package p {
-  margin-bottom: 10px;
+  max-width: none;
+  margin: 0 0 10px;
   color: #c7d1d9;
   line-height: 1.45;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .package-version {
+  display: block;
   color: var(--muted);
   font-size: 13px;
 }
 
 .download-icon-button {
-  display: grid;
-  place-items: center;
-  width: 70px;
-  height: 42px;
-  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 44px;
+  border: 1px solid rgba(246, 196, 83, .45);
+  border-radius: 8px;
   background: var(--gold);
   color: #1b1404;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform .15s ease,
+    filter .15s ease,
+    box-shadow .15s ease;
+}
+
+.download-icon-button:active {
+  transform: translateY(0);
+}
+
+.download-icon-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
 }
 
 .download-icon-button.disabled {
-  background: #2a2e34;
+  background: #202832;
   color: #687481;
   cursor: not-allowed;
 }
 
-.download-details {
-  margin-top: 28px;
+.download-steps {
+  display: grid;
+  gap: 18px;
 }
 
-.details-grid {
+.download-steps ol {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 12px;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.details-grid div {
+.download-steps li {
   display: grid;
-  gap: 7px;
+  gap: 10px;
+  min-height: 132px;
   padding: 16px;
   border: 1px solid var(--line-soft);
   border-radius: 8px;
-  background: var(--panel);
+  background: #0d1218;
 }
 
-.details-grid span {
-  color: var(--muted);
+.download-steps b {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--gold);
+  color: #1b1404;
+}
+
+.download-steps span {
+  color: #c5d0d8;
   line-height: 1.45;
 }
 
@@ -614,13 +886,11 @@ body {
 }
 
 .download-sidebar section {
-  padding: 18px;
-  border-left: 4px solid var(--gold);
-  background: #24282e;
+  border-top: 3px solid var(--gold);
 }
 
 .download-sidebar h2 {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .download-sidebar ul {
@@ -643,6 +913,41 @@ body {
 
 .download-sidebar span {
   color: #c4ced6;
+}
+
+.download-details {
+  padding: 18px 0 76px;
+}
+
+.download-details-head {
+  max-width: 660px;
+  margin-bottom: 14px;
+}
+
+.download-details-head h2 {
+  margin-bottom: 0;
+  font-size: 30px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.details-grid div {
+  display: grid;
+  gap: 7px;
+  min-height: 128px;
+  padding: 18px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.details-grid span {
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .section-heading {
@@ -1986,20 +2291,6 @@ label {
   cursor: not-allowed;
 }
 
-#toggleColorOutputButton.active {
-  border-color: rgba(85, 214, 190, .48);
-  background: rgba(85, 214, 190, .13);
-  color: var(--mint);
-}
-
-#view-colors.output-hidden .color-lab {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-#view-colors.output-hidden .output-panel {
-  display: none;
-}
-
 .output-panel {
   display: grid;
   align-content: start;
@@ -2434,6 +2725,7 @@ body.invalid-session-active .app-shell {
   }
 
   .hero-section,
+  .download-hero,
   .download-layout,
   .download-page-layout,
   .details-grid {
@@ -2443,6 +2735,14 @@ body.invalid-session-active .app-shell {
   .hero-section {
     min-height: auto;
     padding-top: 54px;
+  }
+
+  .download-hero {
+    min-height: auto;
+  }
+
+  .download-quick-card {
+    max-width: 640px;
   }
 
   .hero-copy h1 {
@@ -2515,6 +2815,7 @@ body.invalid-session-active .app-shell {
 
   .hero-section,
   .feature-strip,
+  .preview-gallery,
   .downloads-section,
   .site-footer {
     width: calc(100% - 28px);
@@ -2547,50 +2848,131 @@ body.invalid-session-active .app-shell {
 
   .mini-stat-grid,
   .feature-strip,
+  .preview-grid-home,
   .release-meta,
-  .download-tabs {
+  .download-meta,
+  .download-steps ol {
     grid-template-columns: 1fr;
   }
 
+  .preview-shot-large {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .preview-shot img,
+  .preview-shot-large img {
+    height: clamp(170px, 58vw, 300px);
+  }
+
+  .image-lightbox {
+    padding: 12px;
+  }
+
+  .image-lightbox-panel {
+    width: 100%;
+    max-height: 94vh;
+    padding: 10px;
+  }
+
+  .image-lightbox-panel img {
+    max-height: calc(94vh - 78px);
+  }
+
   .download-hero {
-    padding: 38px 14px 40px;
+    gap: 24px;
+    overflow: hidden;
+    padding: 42px 14px 46px;
   }
 
   .download-hero h1 {
-    max-width: 10ch;
-    font-size: 36px;
+    max-width: 11ch;
+    font-size: 42px;
     line-height: 1.05;
+  }
+
+  .download-hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .download-hero-actions a {
+    width: 100%;
+  }
+
+  .download-quick-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 18px;
+  }
+
+  .download-quick-card h2 {
+    font-size: 38px;
   }
 
   .download-hero p,
   .download-alert p,
   .release-intro,
   .download-package p {
-    max-width: 31ch;
+    max-width: none;
+  }
+
+  .download-page-layout,
+  .download-details {
+    width: calc(100% - 28px);
   }
 
   .download-page-layout {
-    width: calc(100% - 28px);
     padding-bottom: 52px;
   }
 
-  .download-section-head,
-  .download-package {
-    align-items: stretch;
-    grid-template-columns: 1fr;
-  }
-
   .download-section-head {
+    align-items: stretch;
     flex-direction: column;
   }
 
-  .download-section-head .primary-button,
-  .download-icon-button {
+  .download-section-head .primary-button {
     width: 100%;
   }
 
+  .download-package {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
   .download-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
     height: 44px;
+    border: 1px solid rgba(246, 196, 83, .45);
+    border-radius: 8px;
+    background: var(--gold);
+    color: #1b1404;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      transform .15s ease,
+      filter .15s ease,
+      box-shadow .15s ease;
+  }
+
+  .download-icon-button:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(246, 196, 83, .18);
+  }
+
+  .download-icon-button:active {
+    transform: translateY(0);
+  }
+
+  .download-icon-button svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
   }
 
   .download-package small {
@@ -2727,5 +3109,712 @@ body.invalid-session-active .app-shell {
 
   .tag-list {
     max-height: 360px;
+  }
+}
+
+.wiki-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 282px) minmax(0, 1fr);
+  gap: 28px;
+  width: calc(100% - 36px);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 34px 0 76px;
+}
+
+.wiki-sidebar {
+  position: sticky;
+  top: 94px;
+  align-self: start;
+  min-width: 0;
+  max-height: calc(100vh - 116px);
+  padding: 18px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(18, 24, 32, .94);
+  box-shadow: var(--shadow);
+}
+
+.wiki-sidebar-top {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.wiki-sidebar h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.wiki-sidebar-top span {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.wiki-search {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.wiki-search span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.wiki-search input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  outline: 0;
+  padding: 0 12px;
+}
+
+.wiki-search input:focus {
+  border-color: rgba(246, 196, 83, .6);
+  box-shadow: 0 0 0 3px rgba(246, 196, 83, .1);
+}
+
+.wiki-nav {
+  display: grid;
+  gap: 3px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wiki-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #b9c6cf;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+  transition:
+    background .15s ease,
+    color .15s ease;
+}
+
+.wiki-nav a:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, .04);
+}
+
+.wiki-nav a.active {
+  color: #1b1404;
+  background: var(--gold);
+}
+
+.wiki-nav .wiki-sublabel {
+  margin: 14px 0 3px;
+  padding: 0 10px;
+  color: var(--muted-2);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.wiki-empty {
+  padding: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.wiki-content {
+  min-width: 0;
+  padding: 2px 0 0;
+}
+
+.wiki-content h1,
+.wiki-content h2,
+.wiki-content h3,
+.wiki-content p,
+.wiki-content li,
+.wiki-content th,
+.wiki-content td {
+  overflow-wrap: anywhere;
+}
+
+.wiki-content h1 {
+  margin-bottom: 18px;
+  color: var(--text);
+  font-size: 48px;
+  line-height: 1;
+}
+
+.wiki-content h2 {
+  margin-top: 34px;
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.wiki-content h2:first-child {
+  margin-top: 0;
+}
+
+.wiki-content h3 {
+  margin-top: 24px;
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.wiki-content p {
+  max-width: 780px;
+  margin-bottom: 14px;
+  color: #bdc9d1;
+  line-height: 1.65;
+}
+
+.wiki-content ul,
+.wiki-content ol {
+  max-width: 830px;
+  margin: 0 0 16px;
+  padding-left: 24px;
+  color: #bdc9d1;
+}
+
+.wiki-content li {
+  margin-bottom: 7px;
+  line-height: 1.55;
+}
+
+.wiki-content a {
+  color: var(--gold);
+}
+
+.wiki-content pre {
+  max-width: 100%;
+  margin: 16px 0;
+  padding: 16px;
+  overflow: auto;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.wiki-content pre code {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #e8eef2;
+  white-space: pre;
+}
+
+.wiki-content code {
+  border: 1px solid rgba(246, 196, 83, .16);
+  border-radius: 5px;
+  background: rgba(246, 196, 83, .08);
+  color: var(--gold);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: .88em;
+  padding: 2px 6px;
+}
+
+.wiki-content table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 16px 0 22px;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.wiki-content th,
+.wiki-content td {
+  min-width: 160px;
+  border: 1px solid var(--line-soft);
+  padding: 11px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.wiki-content th {
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.wiki-content td {
+  color: #bfccd4;
+  background: rgba(13, 18, 24, .78);
+}
+
+.wiki-hero {
+  position: relative;
+  min-height: 330px;
+  margin-bottom: 22px;
+  padding: clamp(30px, 5vw, 48px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(13, 18, 24, .98) 0%, rgba(13, 18, 24, .88) 48%, rgba(13, 18, 24, .56) 100%),
+    url("https://assets.badlion.net/blog/minecraft-backgrounds/minecraft-mods-back.webp") center / cover no-repeat;
+  box-shadow: var(--shadow);
+}
+
+.wiki-hero h1 {
+  max-width: 12ch;
+  margin-bottom: 16px;
+  font-size: 68px;
+}
+
+.wiki-hero p {
+  max-width: 680px;
+  color: #d1dbe1;
+  font-size: 18px;
+}
+
+.wiki-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.wiki-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(85, 214, 190, .34);
+  border-radius: 999px;
+  background: rgba(85, 214, 190, .11);
+  color: var(--mint);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.wiki-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.wiki-card {
+  min-width: 0;
+  min-height: 166px;
+  padding: 18px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.wiki-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.wiki-card p {
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.wiki-card a {
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.wiki-card a:hover {
+  text-decoration: underline;
+}
+
+.wiki-tip,
+.wiki-state-panel {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid rgba(246, 196, 83, .32);
+  border-radius: 8px;
+  background: rgba(246, 196, 83, .08);
+}
+
+.wiki-tip strong {
+  color: var(--gold);
+}
+
+.wiki-checklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-width: none;
+  padding: 0;
+  list-style: none;
+}
+
+.wiki-checklist li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 88px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.wiki-checklist b {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--gold);
+  color: #1b1404;
+}
+
+.wiki-checklist span {
+  color: #c5d0d8;
+}
+
+.wiki-pager {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.wiki-pager a {
+  display: grid;
+  gap: 4px;
+  min-height: 74px;
+  padding: 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.wiki-pager a:last-child {
+  text-align: right;
+}
+
+.wiki-pager a:hover {
+  border-color: rgba(246, 196, 83, .46);
+}
+
+.wiki-pager small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.wiki-pager strong {
+  font-size: 16px;
+}
+
+.wiki-loading {
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.dump-page {
+  background: #080d12;
+}
+
+.dump-layout {
+  display: grid;
+  gap: 18px;
+  width: calc(100% - 36px);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 34px 0 76px;
+}
+
+.dump-hero {
+  min-height: 260px;
+  padding: clamp(28px, 5vw, 46px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(13, 18, 24, .98) 0%, rgba(13, 18, 24, .86) 58%, rgba(13, 18, 24, .62) 100%),
+    url("https://assets.badlion.net/blog/minecraft-backgrounds/minecraft-mods-back.webp") center / cover no-repeat;
+  box-shadow: var(--shadow);
+}
+
+.dump-hero h1 {
+  margin: 0 0 14px;
+  font-size: 56px;
+  line-height: 1;
+}
+
+.dump-hero p:last-child {
+  max-width: 760px;
+  margin: 0;
+  color: #c6d2da;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.dump-state,
+.dump-panel,
+.dump-details,
+.dump-summary article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.dump-state {
+  padding: 18px;
+  color: #c6d2da;
+}
+
+.dump-state.error {
+  border-color: rgba(255, 102, 122, .42);
+  background: rgba(255, 102, 122, .08);
+  color: #ffd2d8;
+}
+
+.dump-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dump-summary article {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.dump-summary span,
+.dump-kv span,
+.dump-list span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dump-summary strong,
+.dump-kv strong {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.dump-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dump-panel,
+.dump-details {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dump-panel {
+  padding: 20px;
+}
+
+.dump-panel-head h2 {
+  margin: 0 0 16px;
+  font-size: 24px;
+}
+
+.dump-kv {
+  display: grid;
+  gap: 10px;
+}
+
+.dump-kv div {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.dump-details {
+  grid-column: 1 / -1;
+}
+
+.dump-details summary,
+.dump-file summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 18px;
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dump-details summary::-webkit-details-marker,
+.dump-file summary::-webkit-details-marker {
+  display: none;
+}
+
+.dump-details summary::after,
+.dump-file summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.dump-details[open] > summary::after,
+.dump-file[open] > summary::after {
+  transform: rotate(225deg);
+}
+
+.dump-details summary span {
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.dump-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0 18px 18px;
+}
+
+.dump-list div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.dump-list strong {
+  overflow-wrap: anywhere;
+}
+
+.dump-files {
+  display: grid;
+  gap: 10px;
+  padding: 0 18px 18px;
+}
+
+.dump-file {
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+  overflow: hidden;
+}
+
+.dump-file summary {
+  min-height: 46px;
+  padding: 0 14px;
+  color: #d9e4ea;
+}
+
+.dump-details pre,
+.dump-file pre {
+  max-width: 100%;
+  margin: 0;
+  padding: 16px 18px 18px;
+  overflow: auto;
+  border-top: 1px solid var(--line-soft);
+  background: #090d12;
+}
+
+.dump-details pre code,
+.dump-file pre code {
+  display: block;
+  min-width: max-content;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #dce7ed;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+@media (max-width: 980px) {
+  .wiki-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-sidebar {
+    position: static;
+    max-height: none;
+  }
+
+  .dump-summary,
+  .dump-grid,
+  .dump-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .wiki-layout {
+    width: calc(100% - 28px);
+    padding-top: 22px;
+  }
+
+  .wiki-content h1 {
+    font-size: 38px;
+  }
+
+  .wiki-hero h1 {
+    font-size: 42px;
+  }
+
+  .wiki-grid,
+  .wiki-checklist,
+  .wiki-pager {
+    grid-template-columns: 1fr;
+  }
+
+  .dump-layout {
+    width: calc(100% - 28px);
+    padding-top: 22px;
+  }
+
+  .dump-hero h1 {
+    font-size: 38px;
+  }
+
+  .wiki-pager a:last-child {
+    text-align: left;
   }
 }

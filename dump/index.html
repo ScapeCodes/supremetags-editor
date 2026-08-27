@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SupremeTags Dump</title>
+  <link rel="icon" type="image/jpeg" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="apple-touch-icon" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css?v=20260827">
+</head>
+<body class="dump-page">
+  <header class="site-header">
+    <a class="site-brand" href="../">
+      <span class="brand-mark"><img src="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127" alt="SupremeTags logo"></span>
+      <span>SupremeTags</span>
+    </a>
+    <nav class="site-nav" aria-label="Site navigation">
+      <a href="../downloads/">Downloads</a>
+      <a href="../wiki/">Wiki</a>
+      <a href="../editor/">Editor</a>
+    </nav>
+  </header>
+
+  <main class="dump-layout">
+    <section class="dump-hero">
+      <p class="eyebrow">Server dump</p>
+      <h1>SupremeTags Dump</h1>
+      <p id="dumpSubtitle">Loading diagnostic data...</p>
+    </section>
+
+    <section class="dump-state" id="dumpState">Loading dump...</section>
+
+    <section class="dump-summary" id="dumpSummary" hidden>
+      <article>
+        <span>SupremeTags</span>
+        <strong id="dumpPluginVersion">Unknown</strong>
+      </article>
+      <article>
+        <span>Database</span>
+        <strong id="dumpDatabaseType">Unknown</strong>
+      </article>
+      <article>
+        <span>Tags loaded</span>
+        <strong id="dumpTagsLoaded">0</strong>
+      </article>
+      <article>
+        <span>Categories loaded</span>
+        <strong id="dumpCategoriesLoaded">0</strong>
+      </article>
+      <article>
+        <span>Personal tags</span>
+        <strong id="dumpPersonalTags">Unknown</strong>
+      </article>
+    </section>
+
+    <div class="dump-grid" id="dumpContent" hidden>
+      <section class="dump-panel">
+        <div class="dump-panel-head">
+          <h2>Server Info</h2>
+        </div>
+        <div class="dump-kv" id="serverInfo"></div>
+      </section>
+
+      <section class="dump-panel">
+        <div class="dump-panel-head">
+          <h2>Environment</h2>
+        </div>
+        <div class="dump-kv" id="environmentInfo"></div>
+      </section>
+
+      <details class="dump-details" open>
+        <summary>Plugins <span id="pluginCount">0</span></summary>
+        <div class="dump-list" id="pluginList"></div>
+      </details>
+
+      <details class="dump-details">
+        <summary>config.yml</summary>
+        <pre><code id="configFile"></code></pre>
+      </details>
+
+      <details class="dump-details">
+        <summary>Tag Files <span id="tagFileCount">0</span></summary>
+        <div class="dump-files" id="tagFiles"></div>
+      </details>
+
+      <details class="dump-details">
+        <summary>categories.yml</summary>
+        <pre><code id="categoriesFile"></code></pre>
+      </details>
+    </div>
+  </main>
+
+  <script src="dump.js?v=20260827"></script>
+</body>
+</html>
