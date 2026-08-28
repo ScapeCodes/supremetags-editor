@@ -1491,7 +1491,7 @@ async function loadSessionDraft() {
     const session = await response.json();
     applyPayload(session.payload);
   } catch (error) {
-    showInvalidSession(`Session could not be loaded: ${error.message}`);
+    showInvalidSession('Session expired. Run /tags dump again if required.');
   }
 }
 
