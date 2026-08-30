@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wiki - SupremeTags</title>
+  <link rel="icon" type="image/jpeg" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="apple-touch-icon" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="wiki-page">
+  <header class="site-header wiki-header">
+    <a class="site-brand" href="/" aria-label="SupremeTags home">
+      <span class="brand-mark"><img src="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127" alt=""></span>
+      <span>SupremeTags</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="/#features">Features</a>
+      <a href="/downloads/">Downloads</a>
+      <a href="/wiki/" aria-current="page">Wiki</a>
+      <a href="/editor/">Editor</a>
+      <a href="https://discord.gg/PHpuzZS" target="_blank" rel="noreferrer">Support</a>
+    </nav>
+    <a class="primary-button site-download-button" href="/downloads/">
+      <span data-icon="download"></span>
+      Download
+    </a>
+  </header>
+
+  <main>
+    <div class="wiki-layout">
+      <aside class="wiki-sidebar">
+        <div class="wiki-sidebar-top">
+          <p class="eyebrow">Documentation</p>
+          <h2>SupremeTags Wiki</h2>
+          <span id="wikiVersion">Loading latest docs</span>
+        </div>
+        <label class="wiki-search">
+          <span>Search docs</span>
+          <input id="wikiSearch" type="search" placeholder="Search commands, tags, config..." autocomplete="off">
+        </label>
+        <ul class="wiki-nav" id="wikiNav">
+          <li class="wiki-loading">Loading...</li>
+        </ul>
+      </aside>
+      <article class="wiki-content" id="wikiContent">
+        <div class="wiki-loading">Select a page from the sidebar.</div>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <span>SupremeTags</span>
+    <a href="/">Home</a>
+    <a href="/downloads/">Downloads</a>
+    <a href="/wiki/">Wiki</a>
+    <a href="/editor/">Editor</a>
+    <a href="https://discord.gg/PHpuzZS" target="_blank" rel="noreferrer">Support</a>
+  </footer>
+  <script>
+    const icons = {
+      download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>'
+    };
+    document.querySelectorAll('[data-icon]').forEach((node) => {
+      node.innerHTML = icons[node.dataset.icon] || '';
+    });
+  </script>
+  <script src="./wiki.js"></script>
+</body>
+</html>

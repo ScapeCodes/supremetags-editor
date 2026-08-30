@@ -80,12 +80,9 @@ function renderReleasePackages(versions) {
     const packageNode = document.createElement('article');
     const isStable = release.status === 'stable';
     const isAvailable = Boolean(release.file) && release.status !== 'coming_soon';
-    packageNode.className = `download-package ${isStable ? 'selected' : 'coming-soon'}`;
+    packageNode.className = `download-package ${isStable ? 'stable-release' : 'coming-soon'}`;
     packageNode.innerHTML = `
-      <label class="package-select" aria-label="${escapeAttr(release.label || 'SupremeTags')} ${isAvailable ? 'selected' : 'unavailable'}">
-        <input type="checkbox" ${isStable ? 'checked' : ''} disabled>
-        <span></span>
-      </label>
+      <span class="package-mark" aria-hidden="true">${releaseDownloadIcon}</span>
       <div>
         <h3>${escapeHtml(release.label || 'SupremeTags')}${isStable ? '' : ` ${escapeHtml(release.version)}`} <small>${escapeHtml(release.badge || releaseText[release.status] || 'Release')}</small></h3>
         <p>${escapeHtml(release.description || '')}</p>
