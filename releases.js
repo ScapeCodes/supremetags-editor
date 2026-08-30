@@ -56,11 +56,7 @@ function applyReleaseData(releaseData) {
 
   const intro = document.querySelector('[data-release-intro]');
   if (intro) {
-    intro.innerHTML = `The latest stable version of SupremeTags is <strong>${escapeHtml(stable.version)}</strong>. ${
-      development
-        ? `Version <strong>${escapeHtml(development.version)}</strong> is ${development.status === 'coming_soon' ? 'the next development build and is coming soon.' : 'available as a development build.'}`
-        : 'This page only links to files hosted on the SupremeTags site.'
-    }`;
+    intro.textContent = 'Download the current SupremeTags jar, then use the web editor from a server session when you need browser-based tag editing.';
   }
 
   renderReleasePackages(releaseList(releaseData, stable, development));
@@ -82,7 +78,6 @@ function renderReleasePackages(versions) {
     const isAvailable = Boolean(release.file) && release.status !== 'coming_soon';
     packageNode.className = `download-package ${isStable ? 'stable-release' : 'coming-soon'}`;
     packageNode.innerHTML = `
-      <span class="package-mark" aria-hidden="true">${releaseDownloadIcon}</span>
       <div>
         <h3>${escapeHtml(release.label || 'SupremeTags')}${isStable ? '' : ` ${escapeHtml(release.version)}`} <small>${escapeHtml(release.badge || releaseText[release.status] || 'Release')}</small></h3>
         <p>${escapeHtml(release.description || '')}</p>

@@ -2,10 +2,10 @@
   "stable": {
     "version": "3.0.0",
     "file": "SupremeTags-3.0.0.jar",
-    "label": "SupremeTags 3.0.0",
-    "badge": "Required",
+    "label": "SupremeTags",
+    "badge": "Release",
     "status": "stable",
-    "summary": "Latest stable jar",
-    "description": "For server tags, categories, vouchers, variants, personal tags, requirements, and much more!"
+    "summary": "3.0.0 stable",
+    "description": "Core plugin for server tags, categories, vouchers, variants, personal tags, requirements, and much more!"
   }
 }
