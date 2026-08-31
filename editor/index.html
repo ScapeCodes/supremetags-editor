@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" href="https://www.spigotmc.org/data/resource_icons/103/103140.jpg?1762194127">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://assets.mcasset.cloud">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css?v=20260826">
 </head>
@@ -218,7 +219,7 @@
 
             <form class="form-grid tab-panel" id="tab-display">
               <label>Menu display name<input id="fieldDisplayName" type="text"></label>
-              <label>Display item<input id="fieldDisplayItem" type="text"></label>
+              <label>Display item<span class="input-action"><input id="fieldDisplayItem" type="text"><span class="material-preview" data-material-preview-for="fieldDisplayItem" aria-hidden="true"></span><button class="material-picker-button" type="button" data-material-target="fieldDisplayItem" title="Choose material" aria-label="Choose display item"><span data-icon="tag"></span></button></span></label>
               <label>Custom model data<input id="fieldModelData" type="number" min="0"></label>
               <label>Economy type<input id="fieldEconomyType" type="text"></label>
               <label class="full-span">Custom economy take command<input id="fieldTakeCommand" type="text"></label>
@@ -230,7 +231,7 @@
             </form>
 
             <form class="form-grid tab-panel" id="tab-voucher">
-              <label>Voucher material<input id="fieldVoucherMaterial" type="text"></label>
+              <label>Voucher material<span class="input-action"><input id="fieldVoucherMaterial" type="text"><span class="material-preview" data-material-preview-for="fieldVoucherMaterial" aria-hidden="true"></span><button class="material-picker-button" type="button" data-material-target="fieldVoucherMaterial" title="Choose material" aria-label="Choose voucher material"><span data-icon="tag"></span></button></span></label>
               <label>Voucher model data<input id="fieldVoucherModelData" type="number" min="0"></label>
               <label>Voucher display name<input id="fieldVoucherName" type="text"></label>
               <label class="switch-row">Glow<input id="fieldVoucherGlow" type="checkbox"><span></span></label>
@@ -411,7 +412,8 @@
     </main>
   </div>
 
-  <script src="../app.js?v=20260827"></script>
+  <script src="../materials.js?v=20260831"></script>
+  <script src="../app.js?v=20260831"></script>
   <script src="../releases.js?v=20260827"></script>
 </body>
 </html>

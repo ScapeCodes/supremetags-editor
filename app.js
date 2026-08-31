@@ -28,8 +28,14 @@ document.querySelectorAll('[data-icon]').forEach((node) => {
 const DEFAULT_API_URL = 'https://supremetags-editor-api.noscapedev.workers.dev';
 const categories = ['default', 'holiday', 'achievements', 'donator'];
 const rarities = ['common', 'uncommon', 'rare', 'legendary'];
+const excludedMaterialOptions = new Set(['AIR', 'CAVE_AIR', 'VOID_AIR']);
+const fallbackMaterialOptions = ['NAME_TAG', 'BARRIER', 'PAPER', 'BOOK', 'NETHER_STAR', 'EMERALD', 'DIAMOND', 'PLAYER_HEAD'];
+const materialOptionsSource = Array.isArray(window.ST_MATERIAL_OPTIONS) && window.ST_MATERIAL_OPTIONS.length
+  ? window.ST_MATERIAL_OPTIONS
+  : fallbackMaterialOptions;
+const materialOptions = materialOptionsSource.filter((material) => !excludedMaterialOptions.has(material));
 const editorInfo = {
-  version: '2026.1'
+  version: '2026.2'
 };
 let history = [];
 let selectedId = 'hexsupport';
@@ -40,6 +46,10 @@ const colorPresets = ['#ff4d8d', '#f6c453', '#55d6be', '#5d7cff', '#b45cff', '#f
 let colorMode = 'gradient';
 let activeColorStopIndex = 0;
 let pendingFormatColorSelection = null;
+let materialPicker = null;
+let activeMaterialInput = null;
+const materialIconCache = new Map();
+const materialIconFailures = new Set();
 const routeSession = parseSessionRoute();
 const activeSession = {
   id: routeSession.id,
@@ -225,8 +235,194 @@ function fillSelect(select, values, allLabel) {
   });
 }
 
+function bindMaterialPicker(button, input) {
+  if (!button || !input || button.dataset.materialBound === 'true') return;
+  button.dataset.materialBound = 'true';
+  const preview = button.parentElement?.querySelector('.material-preview');
+  if (preview && input.dataset.materialPreviewBound !== 'true') {
+    input.dataset.materialPreviewBound = 'true';
+    input.addEventListener('input', () => updateMaterialPreview(input, preview));
+    updateMaterialPreview(input, preview);
+  }
+  button.addEventListener('click', () => openMaterialMenu(input, button));
+}
+
+function bindStaticMaterialPickers() {
+  document.querySelectorAll('[data-material-target]').forEach((button) => {
+    bindMaterialPicker(button, $(button.dataset.materialTarget));
+  });
+}
+
+function ensureMaterialMenu() {
+  if (materialPicker) return materialPicker;
+  materialPicker = document.createElement('div');
+  materialPicker.className = 'material-menu';
+  materialPicker.hidden = true;
+  materialPicker.innerHTML = `
+    <div class="material-menu-head">
+      <strong>Material selector</strong>
+      <span>${materialOptions.length} materials</span>
+    </div>
+    <div class="material-search">
+      <span data-icon="search"></span>
+      <input type="search" placeholder="Search material">
+    </div>
+    <div class="material-menu-list" role="listbox"></div>
+  `;
+  document.body.appendChild(materialPicker);
+  materialPicker.querySelectorAll('[data-icon]').forEach((node) => {
+    node.innerHTML = icons[node.dataset.icon] || '';
+  });
+  materialPicker.querySelector('input').addEventListener('input', () => renderMaterialMenuOptions());
+  return materialPicker;
+}
+
+function openMaterialMenu(input, anchor) {
+  const menu = ensureMaterialMenu();
+  activeMaterialInput = input;
+  menu.hidden = false;
+  const search = menu.querySelector('input');
+  search.value = '';
+  positionMaterialMenu(anchor);
+  renderMaterialMenuOptions();
+  search.focus();
+}
+
+function closeMaterialMenu() {
+  if (!materialPicker) return;
+  materialPicker.hidden = true;
+  activeMaterialInput = null;
+}
+
+function positionMaterialMenu(anchor) {
+  const menu = ensureMaterialMenu();
+  const rect = anchor.getBoundingClientRect();
+  const width = Math.min(420, Math.max(320, rect.width + 260));
+  const left = Math.min(window.innerWidth - width - 12, Math.max(12, rect.right - width));
+  const top = Math.min(window.innerHeight - 380, rect.bottom + 8);
+  menu.style.width = `${width}px`;
+  menu.style.left = `${left}px`;
+  menu.style.top = `${Math.max(12, top)}px`;
+}
+
+function renderMaterialMenuOptions() {
+  if (!materialPicker || !activeMaterialInput) return;
+  const list = materialPicker.querySelector('.material-menu-list');
+  const query = materialPicker.querySelector('input').value.trim().toUpperCase().replace(/\s+/g, '_');
+  const current = activeMaterialInput.value.trim().toUpperCase();
+  const matches = materialOptions
+    .filter((material) => !query || material.includes(query))
+    .slice(0, 240);
+  preloadMaterialIcons(matches.slice(0, 72));
+  list.innerHTML = matches.length ? matches.map((material) => `
+    <button type="button" class="material-option ${material === current ? 'active' : ''}" data-material="${escapeAttr(material)}" role="option" aria-selected="${material === current}">
+      <span class="material-icon" aria-hidden="true">
+        <img src="${escapeAttr(materialCachedIconUrl(material))}" data-material-icon="${escapeAttr(material)}" data-fallback-src="${escapeAttr(materialIconUrl(material, 'block'))}" alt="" loading="lazy">
+        <span data-icon="tag"></span>
+      </span>
+      <span>${escapeHtml(material)}</span>
+    </button>
+  `).join('') : '<div class="material-empty">No materials found.</div>';
+  list.querySelectorAll('[data-icon]').forEach((node) => {
+    node.innerHTML = icons[node.dataset.icon] || '';
+  });
+  list.querySelectorAll('.material-icon img').forEach((image) => {
+    image.addEventListener('load', () => handleMaterialIconLoad(image));
+    image.addEventListener('error', () => handleMaterialIconError(image));
+  });
+  list.querySelectorAll('[data-material]').forEach((button) => {
+    button.addEventListener('click', () => selectMaterial(button.dataset.material));
+  });
+}
+
+function materialIconUrl(material, folder) {
+  const textureName = String(material || '').toLowerCase();
+  return `https://assets.mcasset.cloud/26.1.2/assets/minecraft/textures/${folder}/${textureName}.png`;
+}
+
+function materialCachedIconUrl(material) {
+  const normalized = normalizeMaterialValue(material);
+  return materialIconCache.get(normalized) || materialIconUrl(normalized, 'item');
+}
+
+function handleMaterialIconError(image) {
+  const material = normalizeMaterialValue(image.dataset.materialIcon);
+  const fallbackSrc = image.dataset.fallbackSrc;
+  if (fallbackSrc && image.src !== fallbackSrc) {
+    image.dataset.fallbackSrc = '';
+    image.src = fallbackSrc;
+    return;
+  }
+  if (material) materialIconFailures.add(material);
+  image.hidden = true;
+  image.closest('.material-icon')?.classList.add('missing');
+}
+
+function handleMaterialIconLoad(image) {
+  const material = normalizeMaterialValue(image.dataset.materialIcon);
+  if (!material) return;
+  materialIconCache.set(material, image.currentSrc || image.src);
+  materialIconFailures.delete(material);
+}
+
+function preloadMaterialIcons(materials) {
+  materials.forEach((material) => {
+    const normalized = normalizeMaterialValue(material);
+    if (!normalized || materialIconCache.has(normalized) || materialIconFailures.has(normalized)) return;
+    const image = new Image();
+    image.onload = () => materialIconCache.set(normalized, image.src);
+    image.onerror = () => {
+      const fallback = new Image();
+      fallback.onload = () => materialIconCache.set(normalized, fallback.src);
+      fallback.onerror = () => materialIconFailures.add(normalized);
+      fallback.src = materialIconUrl(normalized, 'block');
+    };
+    image.src = materialIconUrl(normalized, 'item');
+  });
+}
+
+function normalizeMaterialValue(material) {
+  return String(material || '').trim().toUpperCase().replace(/\s+/g, '_');
+}
+
+function updateMaterialPreview(input, preview) {
+  const material = normalizeMaterialValue(input.value);
+  preview.classList.remove('missing');
+  preview.innerHTML = `
+    <img src="${escapeAttr(materialCachedIconUrl(material))}" data-material-icon="${escapeAttr(material)}" data-fallback-src="${escapeAttr(materialIconUrl(material, 'block'))}" alt="">
+    <span data-icon="tag"></span>
+  `;
+  preview.querySelectorAll('[data-icon]').forEach((node) => {
+    node.innerHTML = icons[node.dataset.icon] || '';
+  });
+  const image = preview.querySelector('img');
+  image.addEventListener('load', () => handleMaterialIconLoad(image));
+  image.addEventListener('error', () => handleMaterialPreviewError(image));
+}
+
+function handleMaterialPreviewError(image) {
+  handleMaterialIconError(image);
+  image.closest('.material-preview')?.classList.add('missing');
+}
+
+function updateAllMaterialPreviews(root = document) {
+  root.querySelectorAll('.material-preview').forEach((preview) => {
+    const input = preview.parentElement?.querySelector('input');
+    if (input) updateMaterialPreview(input, preview);
+  });
+}
+
+function selectMaterial(material) {
+  if (!activeMaterialInput) return;
+  activeMaterialInput.value = material;
+  activeMaterialInput.dispatchEvent(new Event('input', { bubbles: true }));
+  activeMaterialInput.focus();
+  closeMaterialMenu();
+}
+
 function render() {
   tags = tags.map(normalizeTag);
+  bindStaticMaterialPickers();
   fillSelect($('categoryFilter'), categories, 'All categories');
   fillSelect($('rarityFilter'), rarities, 'All rarities');
   fillSelect($('fieldCategory'), categories);
@@ -306,6 +502,7 @@ function renderDetails() {
   $('fieldReqEnabled').checked = tag.requirements.enabled;
   $('fieldReqMode').value = tag.requirements.mode;
   $('fieldReqPersist').checked = tag.requirements.persistUnlock;
+  updateAllMaterialPreviews();
 
   renderVariants(tag);
   renderRequirements(tag);
@@ -465,14 +662,17 @@ function renderVariants(tag) {
         <label>Rarity<select data-field="rarity"><option value="">Use tag rarity</option>${rarities.map((rarity) => `<option value="${escapeAttr(rarity)}">${escapeHtml(rarity)}</option>`).join('')}</select></label>
         <label class="full-span">Frames<textarea data-field="tag" rows="3">${escapeHtml(asLines(variant.tag))}</textarea></label>
         <label class="full-span">Description<textarea data-field="description" rows="2">${escapeHtml(asLines(variant.description))}</textarea></label>
-        <label>Unlocked material<input data-field="unlockedMaterial" value="${escapeAttr(variant.unlockedMaterial)}"></label>
+        <label>Unlocked material<span class="input-action"><input data-field="unlockedMaterial" value="${escapeAttr(variant.unlockedMaterial)}"><span class="material-preview" aria-hidden="true"></span><button class="material-picker-button" type="button" data-material-field="unlockedMaterial" title="Choose material" aria-label="Choose unlocked material"><span data-icon="tag"></span></button></span></label>
         <label>Unlocked name<input data-field="unlockedDisplayName" value="${escapeAttr(variant.unlockedDisplayName)}"></label>
         <label>Unlocked model data<input data-field="unlockedCustomModelData" type="number" min="0" value="${escapeAttr(variant.unlockedCustomModelData)}"></label>
-        <label>Locked material<input data-field="lockedMaterial" value="${escapeAttr(variant.lockedMaterial)}"></label>
+        <label>Locked material<span class="input-action"><input data-field="lockedMaterial" value="${escapeAttr(variant.lockedMaterial)}"><span class="material-preview" aria-hidden="true"></span><button class="material-picker-button" type="button" data-material-field="lockedMaterial" title="Choose material" aria-label="Choose locked material"><span data-icon="tag"></span></button></span></label>
         <label>Locked name<input data-field="lockedDisplayName" value="${escapeAttr(variant.lockedDisplayName)}"></label>
         <label>Locked model data<input data-field="lockedCustomModelData" type="number" min="0" value="${escapeAttr(variant.lockedCustomModelData)}"></label>
       </div>
     `;
+    row.querySelectorAll('[data-icon]').forEach((node) => {
+      node.innerHTML = icons[node.dataset.icon] || '';
+    });
     row.querySelector('[data-field="rarity"]').value = variant.rarity || '';
     row.querySelectorAll('[data-field]').forEach((control) => {
       control.addEventListener('input', () => updateSelectedInline((target) => {
@@ -483,6 +683,9 @@ function renderVariants(tag) {
         else if (field.endsWith('CustomModelData')) target.variants[index][field] = Number(control.value || 0);
         else target.variants[index][field] = control.value;
       }));
+    });
+    row.querySelectorAll('[data-material-field]').forEach((button) => {
+      bindMaterialPicker(button, row.querySelector(`[data-field="${button.dataset.materialField}"]`));
     });
     row.querySelector('[data-action="remove"]').addEventListener('click', () => updateSelected((target) => target.variants.splice(index, 1)));
     $('variantTable').appendChild(row);
@@ -569,6 +772,19 @@ document.querySelectorAll('.tab-button').forEach((button) => {
     document.querySelectorAll('.tab-panel').forEach((node) => node.classList.toggle('active', node.id === `tab-${activeTab}`));
   });
 });
+
+document.addEventListener('pointerdown', (event) => {
+  if (!materialPicker || materialPicker.hidden) return;
+  if (materialPicker.contains(event.target) || event.target.closest('.material-picker-button')) return;
+  closeMaterialMenu();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeMaterialMenu();
+});
+
+window.addEventListener('resize', closeMaterialMenu);
+document.querySelector('.workspace')?.addEventListener('scroll', closeMaterialMenu);
 
 ['searchInput', 'categoryFilter', 'rarityFilter'].forEach((id) => $(id).addEventListener('input', renderTagList));
 $('duplicateTagButton').addEventListener('click', duplicateSelectedTag);
