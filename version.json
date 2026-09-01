@@ -1,11 +1,11 @@
 {
   "stable": {
-    "version": "3.0.0",
-    "file": "SupremeTags-3.0.0.jar",
+    "version": "3.0.1",
+    "file": "SupremeTags-3.0.1.jar",
     "label": "SupremeTags",
     "badge": "Release",
     "status": "stable",
-    "summary": "3.0.0 stable",
-    "description": "Core plugin for server tags, categories, vouchers, variants, personal tags, requirements, and much more!"
+    "summary": "3.0.1 stable",
+    "description": "Fixed Confirm Menu not properly loading all items from configuration."
   }
 }

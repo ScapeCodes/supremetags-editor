@@ -1,7 +1,7 @@
 {
   "title": "SupremeTags Wiki",
   "description": "Official documentation for SupremeTags, a modern Minecraft tag menu, voucher, personal tags, and PlaceholderAPI plugin.",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "nav": [
     {
       "label": "Home",
