@@ -1,11 +1,11 @@
 {
   "stable": {
-    "version": "3.0.1",
-    "file": "SupremeTags-3.0.1.jar",
+    "version": "3.0.2",
+    "file": "SupremeTags-3.0.2.jar",
     "label": "SupremeTags",
     "badge": "Release",
     "status": "stable",
-    "summary": "3.0.1 stable",
-    "description": "Fixed Confirm Menu not properly loading all items from configuration."
+    "summary": "3.0.2 stable",
+    "description": "Many fixes including; menu data loss, itemdata crashes, inventory crashes on chunk unload & more."
   }
 }

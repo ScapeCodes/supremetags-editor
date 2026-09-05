@@ -117,7 +117,7 @@ let tags = [
 
 const pluginInfo = {
   installedVersion: '3.0.0',
-  latestVersion: '3.0.0',
+  latestVersion: '3.0.2',
   serverVersion: 'Paper 26.2',
   storageMode: 'File tags',
   categoriesLoaded: categories.length,
