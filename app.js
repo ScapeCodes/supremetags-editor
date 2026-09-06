@@ -57,6 +57,7 @@ const activeSession = new SupremeTagsEditorSession({
   apiUrl: routeSession.apiUrl || window.ST_EDITOR_API_URL || DEFAULT_API_URL
 });
 const hasSessionLink = Boolean(activeSession.token && activeSession.apiUrl);
+const SESSION_NOTICE_DISMISSED_KEY = 'supremetags.editorSessionNoticeDismissed';
 let sessionLoaded = false;
 let sessionUnavailable = false;
 let sessionRefreshPending = false;
@@ -1719,15 +1720,21 @@ async function loadSessionDraft() {
 }
 
 function showEditorSessionNotice(message, warning = false) {
+  if (!warning && window.localStorage?.getItem(SESSION_NOTICE_DISMISSED_KEY) === 'true') return;
   let notice = $('editorSessionNotice');
   if (!notice) {
     notice = document.createElement('div');
     notice.id = 'editorSessionNotice';
-    notice.className = 'session-notice';
+    notice.className = 'session-notice editor-session-notice';
     notice.setAttribute('role', 'status');
+    notice.innerHTML = '<span></span><button type="button" class="notice-close" aria-label="Dismiss notice" title="Dismiss notice">&times;</button>';
+    notice.querySelector('button').addEventListener('click', () => {
+      window.localStorage?.setItem(SESSION_NOTICE_DISMISSED_KEY, 'true');
+      notice.remove();
+    });
     document.querySelector('.app-shell main').prepend(notice);
   }
-  notice.textContent = message;
+  notice.querySelector('span').textContent = message;
   notice.classList.toggle('warning', warning);
 }
 
