@@ -45,7 +45,7 @@
         </div>
 
         <div class="session-notice" id="sessionNotice">
-          Web editor links are private, short-lived sessions created in-game. Open a fresh session from your server to start editing.
+          Create a private editor session from your server. Apply within one hour, then keep editing with --force for later applies.
         </div>
       </section>
 
@@ -363,7 +363,7 @@
               </div>
               <div>
                 <span>Editor version</span>
-                <strong id="editorVersion">2026.1</strong>
+                <strong id="editorVersion">2026.3</strong>
               </div>
               <div>
                 <span>Resource</span>
@@ -400,7 +400,7 @@
 
       <div class="modal-backdrop" id="applyModal" aria-hidden="true">
         <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="applyModalTitle">
-          <h2 id="applyModalTitle">Apply changes in-game</h2>
+          <h2 id="applyModalTitle">Apply changes on your server</h2>
           <p id="applyModalText">Run this command on your server to apply the saved editor changes.</p>
           <code id="applyCommand">/tags editor apply &lt;id&gt;</code>
           <div class="modal-actions">
@@ -413,7 +413,8 @@
   </div>
 
   <script src="../materials.js?v=20260831"></script>
-  <script src="../app.js?v=20260831"></script>
+  <script src="../session-client.js?v=20260906"></script>
+  <script src="../app.js?v=20260906"></script>
   <script src="../releases.js?v=20260827"></script>
 </body>
 </html>

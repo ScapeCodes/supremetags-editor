@@ -35,7 +35,7 @@ const materialOptionsSource = Array.isArray(window.ST_MATERIAL_OPTIONS) && windo
   : fallbackMaterialOptions;
 const materialOptions = materialOptionsSource.filter((material) => !excludedMaterialOptions.has(material));
 const editorInfo = {
-  version: '2026.2'
+  version: '2026.3'
 };
 let history = [];
 let selectedId = 'hexsupport';
@@ -51,12 +51,17 @@ let activeMaterialInput = null;
 const materialIconCache = new Map();
 const materialIconFailures = new Set();
 const routeSession = parseSessionRoute();
-const activeSession = {
+const activeSession = new SupremeTagsEditorSession({
   id: routeSession.id,
   token: routeSession.token,
   apiUrl: routeSession.apiUrl || window.ST_EDITOR_API_URL || DEFAULT_API_URL
-};
+});
 const hasSessionLink = Boolean(activeSession.token && activeSession.apiUrl);
+let sessionLoaded = false;
+let sessionUnavailable = false;
+let sessionRefreshPending = false;
+let sessionPollTimer = null;
+let applyCommandVisible = false;
 
 let tags = [
   {
@@ -922,7 +927,9 @@ function renderPluginInfo() {
   $('editorVersion').textContent = editorInfo.version;
   $('serverVersion').textContent = pluginInfo.serverVersion;
   $('storageMode').textContent = pluginInfo.storageMode;
-  $('editorSessionState').textContent = hasSessionLink ? 'Connected' : 'Local preview';
+  $('editorSessionState').textContent = sessionUnavailable ? 'Unavailable'
+    : activeSession.forceRequired ? 'Continuous · --force required'
+      : sessionLoaded ? 'Connected · initial session' : hasSessionLink ? 'Connecting' : 'Local preview';
   $('pluginTagsLoaded').textContent = tags.length;
   $('editorVariantCount').textContent = variantCount;
   $('editorRequirementCount').textContent = requirementCount;
@@ -959,21 +966,28 @@ $('applyChangesButton').addEventListener('click', async () => {
   const originalApplyText = $('applyChangesButton').innerHTML;
   $('applyChangesButton').disabled = true;
   $('applyChangesButton').innerHTML = `${icons.download} Saving...`;
-  if (!activeSession.id) {
+  if (!sessionLoaded) {
     $('applyChangesButton').disabled = false;
     $('applyChangesButton').innerHTML = originalApplyText;
     showApplyModal('/tags editor web', 'This page is not connected to a web session. Create a new session from your server first.');
     return;
   }
 
-  const saved = await saveSessionDraft();
-  $('applyChangesButton').disabled = false;
-  $('applyChangesButton').innerHTML = originalApplyText;
-  if (saved) {
-    lockEditorAfterApply();
-    showApplyModal(`/tags editor apply ${activeSession.id}`, 'Run this command on your server to apply the saved editor changes.');
-  } else {
-    showApplyModal('/tags editor web', 'The web session could not be saved or may have expired. Create a new session and try again.');
+  try {
+    await activeSession.save(currentPayload());
+    updateSessionState();
+    showSavedApplyCommand();
+    startSessionPolling();
+  } catch (error) {
+    sessionUnavailable = error.terminal;
+    showEditorSessionNotice(`${error.message} Your edits remain in this page.`, true);
+    showApplyModal(error.terminal ? '/tags editor web' : '',
+      `${error.message} Your edits remain in this page.${error.terminal ? ' A new session is required to apply changes.' : ' Keep this page open and try Apply Changes again.'}`,
+      'Changes not confirmed');
+    renderPluginInfo();
+  } finally {
+    $('applyChangesButton').disabled = sessionUnavailable;
+    $('applyChangesButton').innerHTML = originalApplyText;
   }
 });
 
@@ -1682,94 +1696,83 @@ function parseSessionRoute() {
 }
 
 async function loadSessionDraft() {
-  if (!activeSession.token || !activeSession.apiUrl) {
-    showInvalidSession();
-    return;
-  }
-
+  if (!hasSessionLink) { showInvalidSession(); return; }
   try {
-    const api = activeSession.apiUrl.replace(/\/$/, '');
-    if (!activeSession.id) {
-      const resolveResponse = await fetch(`${api}/sessions/resolve?token=${encodeURIComponent(activeSession.token)}`, { cache: 'no-store' });
-      if (!resolveResponse.ok) {
-        throw new Error(resolveResponse.status === 404 ? 'Session was not found or has expired.' : `HTTP ${resolveResponse.status}`);
-      }
-      const resolved = await resolveResponse.json();
-      activeSession.id = resolved.id;
-    }
-
-    const response = await fetch(`${api}/sessions/${encodeURIComponent(activeSession.id)}?token=${encodeURIComponent(activeSession.token)}`);
-    if (response.status === 410) {
-      showInvalidSession('This editor session has already been applied or has expired. Create a new session with /tags editor web.');
-      return;
-    }
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const session = await response.json();
+    const session = await activeSession.read();
     applyPayload(session.payload);
+    sessionLoaded = true;
+    sessionUnavailable = false;
+    document.body.classList.remove('invalid-session-active');
+    updateSessionState();
+    startSessionPolling();
   } catch (error) {
-    showInvalidSession('Session expired. Run /tags dump again if required.');
+    sessionUnavailable = Boolean(error.terminal);
+    showInvalidSession(error.message);
+    if (!error.terminal) {
+      const retry = document.createElement('button');
+      retry.className = 'secondary-button';
+      retry.textContent = 'Retry connection';
+      retry.addEventListener('click', () => { retry.disabled = true; loadSessionDraft(); });
+      $('sessionNotice').append(document.createElement('br'), retry);
+    }
   }
 }
 
-async function saveSessionDraft() {
-  if (!activeSession.id || !activeSession.token || !activeSession.apiUrl) {
-    return false;
+function showEditorSessionNotice(message, warning = false) {
+  let notice = $('editorSessionNotice');
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.id = 'editorSessionNotice';
+    notice.className = 'session-notice';
+    notice.setAttribute('role', 'status');
+    document.querySelector('.app-shell main').prepend(notice);
   }
+  notice.textContent = message;
+  notice.classList.toggle('warning', warning);
+}
 
+function updateSessionState() {
+  renderPluginInfo();
+  showEditorSessionNotice(activeSession.forceRequired
+    ? 'Continuous session: keep editing. Further applies use --force and replace the server tag data with your saved editor data.'
+    : 'Apply your first changes within one hour of creating the session. After a successful server apply, this editor stays open.');
+  if (applyCommandVisible && $('applyModal').classList.contains('active')) showSavedApplyCommand();
+}
+
+function showSavedApplyCommand() {
+  showApplyModal(activeSession.applyCommand, activeSession.forceRequired
+    ? 'Run this command on your server to override the current tag data with your saved editor changes. This session will stay open.'
+    : 'Run this command on your server to apply the saved changes. After it succeeds, keep this editor open for further edits.', 'Apply changes on your server');
+  applyCommandVisible = true;
+}
+
+function startSessionPolling() {
+  if (sessionPollTimer) return;
+  sessionPollTimer = window.setInterval(refreshSessionState, 15000);
+}
+
+async function refreshSessionState() {
+  if (!sessionLoaded || sessionUnavailable || sessionRefreshPending || document.hidden) return;
+  sessionRefreshPending = true;
   try {
-    const api = activeSession.apiUrl.replace(/\/$/, '');
-    const payload = currentPayload();
-    const response = await fetch(`${api}/sessions/${encodeURIComponent(activeSession.id)}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${activeSession.token}`
-      },
-      body: JSON.stringify({ payload })
-    });
-    if (response.status === 410) {
-      showInvalidSession('This editor session has already been applied or has expired. Create a new session with /tags editor web.');
-      return false;
-    }
-    if (!response.ok) throw new Error(await response.text());
-    return await waitForSavedSession(api, payload);
+    // Read only metadata: never replace the user's unsaved fields during background refresh.
+    await activeSession.read();
+    updateSessionState();
   } catch (error) {
-    console.error(error);
-    return false;
+    sessionUnavailable = Boolean(error.terminal);
+    showEditorSessionNotice(error.message + ' Your edits remain in this page.', true);
+    if (sessionUnavailable) {
+      $('applyChangesButton').disabled = true;
+      window.clearInterval(sessionPollTimer);
+      sessionPollTimer = null;
+    }
+    renderPluginInfo();
+  } finally {
+    sessionRefreshPending = false;
   }
 }
 
-async function waitForSavedSession(api, expectedPayload) {
-  const sessionUrl = `${api}/sessions/${encodeURIComponent(activeSession.id)}?token=${encodeURIComponent(activeSession.token)}`;
-  const attempts = [250, 500, 800, 1200, 1600, 2200, 3000];
-  let lastError = 'Session save was not verified.';
-
-  for (const delay of attempts) {
-    await sleep(delay);
-    const verifyResponse = await fetch(sessionUrl, { cache: 'no-store' });
-    if (verifyResponse.status === 410) {
-      showInvalidSession('This editor session has already been applied or has expired. Create a new session with /tags editor web.');
-      return false;
-    }
-    if (!verifyResponse.ok) {
-      lastError = `Could not verify saved session: HTTP ${verifyResponse.status}`;
-      continue;
-    }
-
-    const verified = await verifyResponse.json();
-    if (verified.status !== 'ready') {
-      lastError = `Session is still ${verified.status || 'not ready'}.`;
-      continue;
-    }
-    if (!samePayload(expectedPayload, verified.payload)) {
-      lastError = 'Saved session verification failed. The latest browser changes did not reach the backend.';
-      continue;
-    }
-    return true;
-  }
-
-  throw new Error(lastError);
-}
+window.addEventListener('focus', refreshSessionState);
 
 function applyPayload(payload) {
   const importedTags = payload?.data?.tags || payload?.tags;
@@ -1838,55 +1841,24 @@ function syncSelectedFromForm() {
   }
 }
 
-function samePayload(expected, actual) {
-  return stableStringify(expected) === stableStringify(actual);
-}
-
-function stableStringify(value) {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(',')}]`;
-  }
-  if (value && typeof value === 'object') {
-    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
-  }
-  return JSON.stringify(value);
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
-
 function showInvalidSession(message) {
-  clearSessionUrl();
   document.body.classList.add('invalid-session-active');
   const notice = $('sessionNotice');
   if (notice) {
-    notice.textContent = message || 'Web editor links are private, short-lived sessions created in-game. Open a fresh session from your server to start editing.';
+    notice.textContent = message || 'Create a private editor session from your server. Apply within one hour, then keep editing with --force for later applies.';
     notice.classList.toggle('warning', Boolean(message));
   }
 }
 
-function clearSessionUrl() {
-  if (!window.history?.replaceState) return;
-  const path = window.location.pathname.endsWith('/editor') ? '/editor/' : window.location.pathname;
-  const cleanUrl = `${window.location.origin}${path || '/'}`;
-  if (window.location.href !== cleanUrl) {
-    window.history.replaceState({}, document.title, cleanUrl);
-  }
-}
-
-function showApplyModal(command, message) {
+function showApplyModal(command, message, title = 'Apply changes on your server') {
+  applyCommandVisible = false;
   $('applyCommand').textContent = command;
+  $('applyCommand').hidden = !command;
+  $('copyApplyCommand').disabled = !command;
+  $('applyModalTitle').textContent = title;
   $('applyModalText').textContent = message;
   $('applyModal').classList.add('active');
   $('applyModal').setAttribute('aria-hidden', 'false');
-}
-
-function lockEditorAfterApply() {
-  document.querySelectorAll('.app-shell input, .app-shell select, .app-shell textarea, .app-shell button').forEach((control) => {
-    if (control.closest('#applyModal')) return;
-    control.disabled = true;
-  });
 }
 
 $('copyApplyCommand').addEventListener('click', () => navigator.clipboard?.writeText($('applyCommand').textContent));
