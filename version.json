@@ -1,11 +1,11 @@
 {
   "stable": {
-    "version": "3.0.2",
-    "file": "SupremeTags-3.0.2.jar",
+    "version": "3.0.3",
+    "file": "SupremeTags-3.0.3.jar",
     "label": "SupremeTags",
     "badge": "Release",
     "status": "stable",
-    "summary": "3.0.2 stable",
-    "description": "Many fixes including; menu data loss, itemdata crashes, inventory crashes on chunk unload & more."
+    "summary": "3.0.3 stable",
+    "description": "Improves Editor sessions & Fixes placeholderapi in descriptions."
   }
 }
