@@ -2851,6 +2851,35 @@ code {
   background: rgba(255, 102, 122, .09);
 }
 
+.editor-session-notice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.notice-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(246, 196, 83, .28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .04);
+  color: inherit;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.notice-close:hover,
+.notice-close:focus-visible {
+  border-color: rgba(246, 196, 83, .58);
+  background: rgba(255, 255, 255, .08);
+  outline: 0;
+}
+
 .home-preview {
   display: grid;
   align-content: center;
