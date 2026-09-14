@@ -1716,6 +1716,19 @@ label {
   margin-bottom: 14px;
 }
 
+.bulk-select-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.bulk-select-row span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .bulk-head strong,
 .mini-card-head strong {
   display: block;
@@ -1772,7 +1785,8 @@ label {
 
 .tag-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
   gap: 8px;
   padding: 12px;
   border: 1px solid transparent;
@@ -1786,6 +1800,54 @@ label {
 .tag-row:hover,
 .tag-row.active {
   border-color: rgba(246, 196, 83, .55);
+}
+
+.tag-row.selectable.selected {
+  border-color: rgba(246, 196, 83, .65);
+  background: rgba(246, 196, 83, .08);
+}
+
+.bulk-check {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--bg);
+  background: transparent;
+}
+
+.bulk-check.checked {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+
+.bulk-check svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 3;
+}
+
+.tag-row.dragging {
+  opacity: .48;
+}
+
+.tag-row.drop-target {
+  border-color: var(--mint);
+  box-shadow: inset 0 0 0 1px rgba(85, 214, 190, .28);
+}
+
+.drag-handle {
+  color: var(--muted-2);
+  cursor: grab;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+.tag-row:active .drag-handle {
+  cursor: grabbing;
 }
 
 .tag-row strong,
@@ -2048,6 +2110,110 @@ label {
   min-height: 28px;
   overflow-wrap: anywhere;
   font-size: 24px;
+}
+
+.live-preview-box small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.economy-builder {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.economy-builder-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.economy-builder-row > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.economy-builder-row > div > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.economy-presets,
+.economy-amount-presets,
+.requirement-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.economy-presets button,
+.economy-amount-presets button,
+.requirement-presets button {
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.economy-presets button:hover,
+.economy-amount-presets button:hover,
+.requirement-presets button:hover {
+  border-color: rgba(246, 196, 83, .5);
+}
+
+.economy-preview {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.economy-preview div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.economy-preview span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.economy-preview strong,
+.economy-preview code {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.economy-preview code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+}
+
+#fieldExcellentEconomyIdRow[hidden] {
+  display: none;
 }
 
 .preview-box.tall {
@@ -2969,6 +3135,45 @@ code {
   box-shadow: var(--shadow);
 }
 
+.compare-panel {
+  width: min(100%, 760px);
+  max-height: min(760px, calc(100vh - 48px));
+  overflow: auto;
+}
+
+.compare-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.compare-row {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border: 1px solid var(--line-soft);
+  border-left: 4px solid var(--muted-2);
+  border-radius: 8px;
+  background: #0d1218;
+}
+
+.compare-row.added {
+  border-left-color: var(--mint);
+}
+
+.compare-row.changed {
+  border-left-color: var(--gold);
+}
+
+.compare-row.deleted {
+  border-left-color: var(--red);
+}
+
+.compare-row span {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
 .modal-panel code {
   display: block;
   margin: 16px 0;
@@ -3362,6 +3567,7 @@ body.invalid-session-active .app-shell {
   .form-grid,
   .bulk-controls,
   .bulk-grid,
+  .economy-builder-row,
   .mini-card-grid,
   .invalid-panel,
   .home-actions,

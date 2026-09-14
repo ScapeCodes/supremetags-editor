@@ -1,11 +1,11 @@
 {
   "stable": {
-    "version": "3.0.3",
-    "file": "SupremeTags-3.0.3.jar",
+    "version": "3.0.4",
+    "file": "SupremeTags-3.0.4.jar",
     "label": "SupremeTags",
     "badge": "Release",
     "status": "stable",
-    "summary": "3.0.3 stable",
-    "description": "Improves Editor sessions & Fixes placeholderapi in descriptions."
+    "summary": "3.0.4 stable",
+    "description": "This build comes with many fixes to the plugin and editor."
   }
 }

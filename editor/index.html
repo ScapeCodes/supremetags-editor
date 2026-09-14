@@ -141,14 +141,16 @@
           <div class="bulk-head">
             <div>
               <strong>Bulk tools</strong>
-              <span id="bulkSummary">No tags matched</span>
+              <span id="bulkSummary">No tags selected</span>
             </div>
             <button class="icon-button" id="closeBulkButton" type="button" title="Close bulk tools">×</button>
           </div>
-          <div class="bulk-grid">
-            <label>Match category<select id="bulkMatchCategory"></select></label>
-            <label>Match rarity<select id="bulkMatchRarity"></select></label>
-            <label>Text contains<input id="bulkMatchText" placeholder="identifier, permission, display text"></label>
+          <div class="bulk-select-row">
+            <button class="secondary-button" id="selectVisibleButton" type="button">Select visible</button>
+            <button class="secondary-button" id="clearSelectionButton" type="button">Clear selection</button>
+            <span id="bulkSelectionHint">Use the checkboxes in the tag list.</span>
+          </div>
+          <div class="bulk-grid compact">
             <label>Set category<select id="bulkSetCategory"></select></label>
             <label>Set rarity<select id="bulkSetRarity"></select></label>
             <label>Permission prefix<input id="bulkPermission" placeholder="supremetags.tag."></label>
@@ -159,7 +161,7 @@
           </div>
           <div class="bulk-actions-row">
             <div id="bulkMatches"></div>
-            <button class="primary-button" id="applyBulkButton" type="button"><span data-icon="wand"></span>Apply to matches</button>
+            <button class="primary-button" id="applyBulkButton" type="button"><span data-icon="wand"></span>Apply to selected</button>
           </div>
         </section>
 
@@ -187,6 +189,7 @@
                 <button class="tab-button" data-tab="display">Display</button>
                 <button class="tab-button" data-tab="voucher">Voucher</button>
                 <button class="tab-button" data-tab="variants">Variants</button>
+                <button class="tab-button" data-tab="economy">Economy</button>
                 <button class="tab-button" data-tab="requirements">Requirements</button>
               </div>
               <details class="tag-actions-menu">
@@ -206,9 +209,7 @@
               <label>Category<select id="fieldCategory"></select></label>
               <label>Rarity<select id="fieldRarity"></select></label>
               <label>Order<input id="fieldOrder" type="number" min="0"></label>
-              <label>Cost<input id="fieldCost" type="number" min="0" step="0.01"></label>
               <label class="switch-row">Withdrawable<input id="fieldWithdrawable" type="checkbox"><span></span></label>
-              <label class="switch-row">Economy enabled<input id="fieldEconomyEnabled" type="checkbox"><span></span></label>
               <label class="full-span">Tag frames<textarea id="fieldTagFrames" rows="4"></textarea></label>
               <label class="full-span">Description<textarea id="fieldDescription" rows="4"></textarea></label>
               <label class="full-span">Permission groups<textarea id="fieldGroups" rows="3" placeholder="vip&#10;mvp"></textarea></label>
@@ -221,12 +222,57 @@
               <label>Menu display name<input id="fieldDisplayName" type="text"></label>
               <label>Display item<span class="input-action"><input id="fieldDisplayItem" type="text"><span class="material-preview" data-material-preview-for="fieldDisplayItem" aria-hidden="true"></span><button class="material-picker-button" type="button" data-material-target="fieldDisplayItem" title="Choose material" aria-label="Choose display item"><span data-icon="tag"></span></button></span></label>
               <label>Custom model data<input id="fieldModelData" type="number" min="0"></label>
-              <label>Economy type<input id="fieldEconomyType" type="text"></label>
-              <label class="full-span">Custom economy take command<input id="fieldTakeCommand" type="text"></label>
-              <label class="full-span">Custom economy condition<input id="fieldCondition" type="text"></label>
-              <div class="full-span preview-box">
+              <div class="full-span preview-box live-preview-box">
                 <span>Live chat preview</span>
                 <strong id="chatPreview"></strong>
+                <small id="plainPreview"></small>
+              </div>
+            </form>
+
+            <form class="form-grid tab-panel" id="tab-economy">
+              <label class="switch-row">Economy enabled<input id="fieldEconomyEnabled" type="checkbox"><span></span></label>
+              <label>Cost<input id="fieldCost" type="number" min="0" step="0.01"></label>
+              <label>Economy type<select id="fieldEconomyType"></select></label>
+              <label id="fieldExcellentEconomyIdRow">ExcellentEconomy ID<input id="fieldExcellentEconomyId" type="text" placeholder="default"></label>
+              <label class="full-span">Custom economy take command<input id="fieldTakeCommand" type="text"></label>
+              <label class="full-span">Custom economy condition<input id="fieldCondition" type="text"></label>
+              <div class="full-span economy-builder">
+                <div class="economy-builder-row">
+                  <div>
+                    <span>Provider preset</span>
+                    <div class="economy-presets">
+                      <button type="button" data-economy-preset="VAULT">Vault</button>
+                      <button type="button" data-economy-preset="PLAYERPOINTS">PlayerPoints</button>
+                      <button type="button" data-economy-preset="EXP_LEVEL">EXP</button>
+                      <button type="button" data-economy-preset="EXCELLENTECONOMY">ExcellentEconomy</button>
+                      <button type="button" data-economy-preset="CUSTOM">Custom</button>
+                    </div>
+                  </div>
+                  <div>
+                    <span>Cost preset</span>
+                    <div class="economy-amount-presets" aria-label="Cost presets">
+                      <button type="button" data-economy-amount="0">Free</button>
+                      <button type="button" data-economy-amount="100">100</button>
+                      <button type="button" data-economy-amount="500">500</button>
+                      <button type="button" data-economy-amount="1000">1,000</button>
+                      <button type="button" data-economy-amount="5000">5,000</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="full-span economy-preview">
+                <div>
+                  <span>Status</span>
+                  <strong id="economyPreviewStatus"></strong>
+                </div>
+                <div>
+                  <span>Player sees</span>
+                  <strong id="economyPreviewPlayer"></strong>
+                </div>
+                <div>
+                  <span>Server action</span>
+                  <code id="economyPreviewAction"></code>
+                </div>
               </div>
             </form>
 
@@ -254,7 +300,13 @@
               </div>
               <div class="table-actions">
                 <strong>Requirement rules</strong>
-                <button class="secondary-button" id="addRequirementButton" type="button"><span data-icon="plus"></span>Add</button>
+                <div class="requirement-presets">
+                  <button type="button" data-requirement-preset="permission">Permission</button>
+                  <button type="button" data-requirement-preset="placeholder">Placeholder</button>
+                  <button type="button" data-requirement-preset="tag">Tag</button>
+                  <button type="button" data-requirement-preset="economy">Economy</button>
+                  <button class="secondary-button" id="addRequirementButton" type="button"><span data-icon="plus"></span>Add</button>
+                </div>
               </div>
               <div class="mini-table" id="requirementTable"></div>
             </div>
@@ -359,7 +411,7 @@
               </div>
               <div>
                 <span>Latest Spigot version</span>
-                <strong id="latestVersion">3.0.0</strong>
+                <strong id="latestVersion">3.0.4</strong>
               </div>
               <div>
                 <span>Editor version</span>
@@ -406,6 +458,18 @@
           <div class="modal-actions">
             <button class="secondary-button" id="copyApplyCommand"><span data-icon="copy"></span>Copy</button>
             <button class="primary-button" id="closeApplyModal">Done</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-backdrop" id="compareModal" aria-hidden="true">
+        <div class="modal-panel compare-panel" role="dialog" aria-modal="true" aria-labelledby="compareModalTitle">
+          <h2 id="compareModalTitle">Compare before applying</h2>
+          <p>Review the editor changes that will be saved to this web session.</p>
+          <div class="compare-list" id="compareList"></div>
+          <div class="modal-actions">
+            <button class="secondary-button" id="cancelCompareButton" type="button">Cancel</button>
+            <button class="primary-button" id="confirmCompareButton" type="button"><span data-icon="download"></span>Save Session</button>
           </div>
         </div>
       </div>

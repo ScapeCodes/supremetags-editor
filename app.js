@@ -35,7 +35,7 @@ const materialOptionsSource = Array.isArray(window.ST_MATERIAL_OPTIONS) && windo
   : fallbackMaterialOptions;
 const materialOptions = materialOptionsSource.filter((material) => !excludedMaterialOptions.has(material));
 const editorInfo = {
-  version: '2026.3'
+  version: '2026.4'
 };
 let history = [];
 let selectedId = 'hexsupport';
@@ -63,6 +63,11 @@ let sessionUnavailable = false;
 let sessionRefreshPending = false;
 let sessionPollTimer = null;
 let applyCommandVisible = false;
+let draggedTagId = null;
+let pendingApplyText = '';
+let bulkMode = false;
+const selectedBulkTags = new Set();
+const economyTypes = ['VAULT', 'PLAYERPOINTS', 'EXP_LEVEL', 'CUSTOM', 'EXCELLENTECONOMY'];
 
 let tags = [
   {
@@ -433,8 +438,7 @@ function render() {
   fillSelect($('rarityFilter'), rarities, 'All rarities');
   fillSelect($('fieldCategory'), categories);
   fillSelect($('fieldRarity'), rarities);
-  fillSelect($('bulkMatchCategory'), categories, 'Any category');
-  fillSelect($('bulkMatchRarity'), rarities, 'Any rarity');
+  fillSelect($('fieldEconomyType'), economyTypes);
   fillSelect($('bulkSetCategory'), categories, 'Keep category');
   fillSelect($('bulkSetRarity'), rarities, 'Keep rarity');
   renderTagList();
@@ -456,22 +460,57 @@ function renderTagList() {
     .sort((a, b) => a.order - b.order);
 
   $('tagCount').textContent = tags.length;
-  $('visibleCount').textContent = `${visible.length} visible`;
+  $('visibleCount').textContent = bulkMode ? `${selectedBulkTags.size} selected · ${visible.length} visible` : `${visible.length} visible`;
   $('tagList').innerHTML = '';
+  $('tagList').dataset.visibleIds = visible.map((tag) => tag.identifier).join('\n');
 
   visible.forEach((tag) => {
     const button = document.createElement('button');
-    button.className = `tag-row ${tag.identifier === selectedId ? 'active' : ''}`;
-    button.innerHTML = `<div><strong>${tag.identifier}</strong><span>${tag.category} · ${tag.permission}</span></div><em class="rarity-badge">${tag.rarity}</em>`;
-    button.addEventListener('click', () => {
+    button.className = `tag-row ${tag.identifier === selectedId ? 'active' : ''} ${bulkMode ? 'selectable' : ''} ${selectedBulkTags.has(tag.identifier) ? 'selected' : ''}`;
+    button.draggable = !bulkMode;
+    button.dataset.tagId = tag.identifier;
+    const leading = bulkMode
+      ? `<span class="bulk-check ${selectedBulkTags.has(tag.identifier) ? 'checked' : ''}" aria-hidden="true">${selectedBulkTags.has(tag.identifier) ? icons.check : ''}</span>`
+      : '<span class="drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</span>';
+    button.innerHTML = `${leading}<div><strong>${escapeHtml(tag.identifier)}</strong><span>${escapeHtml(tag.category)} · ${escapeHtml(tag.permission)}</span></div><em class="rarity-badge">${escapeHtml(tag.rarity)}</em>`;
+    button.addEventListener('click', (event) => {
+      if (bulkMode) {
+        event.preventDefault();
+        toggleBulkTag(tag.identifier);
+        return;
+      }
       selectedId = tag.identifier;
       renderDetails();
       renderTagList();
     });
+    button.addEventListener('dragstart', (event) => {
+      if (bulkMode) return;
+      draggedTagId = tag.identifier;
+      button.classList.add('dragging');
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', tag.identifier);
+    });
+    button.addEventListener('dragend', () => {
+      draggedTagId = null;
+      button.classList.remove('dragging');
+      document.querySelectorAll('.tag-row.drop-target').forEach((node) => node.classList.remove('drop-target'));
+    });
+    button.addEventListener('dragover', (event) => {
+      if (bulkMode || !draggedTagId || draggedTagId === tag.identifier) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      button.classList.add('drop-target');
+    });
+    button.addEventListener('dragleave', () => button.classList.remove('drop-target'));
+    button.addEventListener('drop', (event) => {
+      if (bulkMode) return;
+      event.preventDefault();
+      button.classList.remove('drop-target');
+      reorderTag(draggedTagId, tag.identifier);
+    });
     $('tagList').appendChild(button);
   });
 }
-
 function renderDetails() {
   const tag = selectedTag();
   if (!tag) return;
@@ -479,6 +518,7 @@ function renderDetails() {
   $('detailTitle').textContent = tag.identifier;
   $('headerPreview').innerHTML = minecraftToHtml(tag.tag[0]);
   $('chatPreview').innerHTML = minecraftToHtml(tag.tag[0]);
+  $('plainPreview').textContent = deformatPreview(tag.tag[0]);
 
   $('fieldIdentifier').value = tag.identifier;
   $('fieldPermission').value = tag.permission;
@@ -497,7 +537,17 @@ function renderDetails() {
   $('fieldDisplayName').value = tag.displayName;
   $('fieldDisplayItem').value = tag.displayItem;
   $('fieldModelData').value = tag.customModelData;
-  $('fieldEconomyType').value = tag.economy.type;
+  const economySelectValue = isExcellentEconomyType(tag.economy.type) ? 'EXCELLENTECONOMY' : tag.economy.type;
+  $('fieldEconomyType').value = economySelectValue;
+  if (!$('fieldEconomyType').value) {
+    const option = document.createElement('option');
+    option.value = tag.economy.type;
+    option.textContent = tag.economy.type;
+    $('fieldEconomyType').appendChild(option);
+    $('fieldEconomyType').value = tag.economy.type;
+  }
+  $('fieldExcellentEconomyId').value = excellentEconomyId(tag.economy.type);
+  $('fieldExcellentEconomyIdRow').hidden = !isExcellentEconomyType($('fieldEconomyType').value);
   $('fieldTakeCommand').value = tag.economy.takeCommand;
   $('fieldCondition').value = tag.economy.condition;
   $('fieldVoucherMaterial').value = tag.voucher.material;
@@ -509,9 +559,81 @@ function renderDetails() {
   $('fieldReqMode').value = tag.requirements.mode;
   $('fieldReqPersist').checked = tag.requirements.persistUnlock;
   updateAllMaterialPreviews();
+  renderEconomySummary(tag);
 
   renderVariants(tag);
   renderRequirements(tag);
+}
+
+function renderEconomySummary(tag) {
+  const economy = tag.economy || {};
+  const amountNumber = Number(economy.amount || 0);
+  const amount = amountNumber.toLocaleString();
+  const type = economy.type || 'VAULT';
+  const providerLabel = economyProviderLabel(type);
+  $('economyPreviewStatus').textContent = economy.enabled
+    ? `${tag.identifier} costs ${amount} via ${providerLabel}.`
+    : `${tag.identifier} is free to select.`;
+  $('economyPreviewPlayer').textContent = economy.enabled
+    ? `Unlock ${tag.identifier} for ${amount} ${providerLabel}.`
+    : `Select ${tag.identifier} without a purchase.`;
+  $('economyPreviewAction').textContent = economy.enabled
+    ? economyServerAction(economy, amountNumber)
+    : 'No economy transaction will run.';
+}
+
+function economyProviderLabel(type) {
+  if (type === 'VAULT') return 'Vault';
+  if (type === 'PLAYERPOINTS') return 'PlayerPoints';
+  if (type === 'EXP_LEVEL') return 'EXP levels';
+  if (type === 'CUSTOM') return 'Custom command';
+  if (type?.startsWith('EXCELLENTECONOMY-')) return `ExcellentEconomy:${type.replace('EXCELLENTECONOMY-', '') || 'default'}`;
+  return type || 'Vault';
+}
+
+function excellentEconomyId(type) {
+  return type?.startsWith('EXCELLENTECONOMY-') ? type.replace('EXCELLENTECONOMY-', '') || 'default' : 'default';
+}
+
+function excellentEconomyType(id) {
+  return `EXCELLENTECONOMY-${slugify(id || 'default')}`;
+}
+
+function isExcellentEconomyType(type) {
+  return type === 'EXCELLENTECONOMY' || type?.startsWith('EXCELLENTECONOMY-');
+}
+
+function economyServerAction(economy, amount) {
+  const type = economy.type || 'VAULT';
+  if (type === 'VAULT') return `Withdraw ${amount} from Vault balance.`;
+  if (type === 'PLAYERPOINTS') return `Take ${Math.floor(amount)} PlayerPoints.`;
+  if (type === 'EXP_LEVEL') return `Remove ${Math.floor(amount)} EXP level(s).`;
+  if (type.startsWith('EXCELLENTECONOMY-')) return `Withdraw ${amount} from ${economyProviderLabel(type)}.`;
+  if (type === 'CUSTOM') {
+    const command = economy.takeCommand || 'No command set';
+    const condition = economy.condition || 'No condition set';
+    return `${command} | condition: ${condition}`;
+  }
+  return `Use configured economy type ${type}.`;
+}
+
+function deformatPreview(value) {
+  return stripMiniMessageTags(stripMinecraftCodes(String(value || ''))).replace(/\s+/g, ' ').trim();
+}
+
+function reorderTag(sourceId, targetId) {
+  if (!sourceId || !targetId || sourceId === targetId) return;
+  const from = tags.findIndex((tag) => tag.identifier === sourceId);
+  const to = tags.findIndex((tag) => tag.identifier === targetId);
+  if (from === -1 || to === -1) return;
+  pushHistory();
+  const [moved] = tags.splice(from, 1);
+  tags.splice(to, 0, moved);
+  tags.forEach((tag, index) => {
+    tag.order = index + 1;
+  });
+  selectedId = moved.identifier;
+  render();
 }
 
 function updateSelected(mutator) {
@@ -636,7 +758,14 @@ bindField('fieldCustomPlaceholders', (tag, input) => tag.customPlaceholders = pa
 bindField('fieldDisplayName', (tag, input) => tag.displayName = input.value);
 bindField('fieldDisplayItem', (tag, input) => tag.displayItem = input.value);
 bindField('fieldModelData', (tag, input) => tag.customModelData = Number(input.value || 0));
-bindField('fieldEconomyType', (tag, input) => tag.economy.type = input.value);
+bindField('fieldEconomyType', (tag, input) => {
+  tag.economy.type = isExcellentEconomyType(input.value)
+    ? excellentEconomyType($('fieldExcellentEconomyId').value)
+    : input.value;
+}, 'change');
+bindField('fieldExcellentEconomyId', (tag, input) => {
+  tag.economy.type = excellentEconomyType(input.value);
+});
 bindField('fieldTakeCommand', (tag, input) => tag.economy.takeCommand = input.value);
 bindField('fieldCondition', (tag, input) => tag.economy.condition = input.value);
 bindField('fieldVoucherMaterial', (tag, input) => tag.voucher.material = input.value);
@@ -759,6 +888,49 @@ $('addRequirementButton').addEventListener('click', () => updateSelected((tag) =
   display: '<reset><white>- <gray>Required permission'
 }))));
 
+document.querySelectorAll('[data-requirement-preset]').forEach((button) => {
+  button.addEventListener('click', () => updateSelected((tag) => {
+    const preset = button.dataset.requirementPreset;
+    tag.requirements.enabled = true;
+    tag.requirements.list.push(requirementPreset(preset, tag));
+  }));
+});
+
+function requirementPreset(type, tag) {
+  const presets = {
+    permission: {
+      name: 'permission',
+      type: 'permission',
+      permission: tag.permission,
+      display: '<reset><white>- <gray>Required permission',
+      message: '<reset><red>You do not have permission for this tag.'
+    },
+    placeholder: {
+      name: 'placeholder',
+      type: 'placeholder',
+      placeholder: '%statistic_time_played%',
+      operator: '>=',
+      value: '72000',
+      display: '<reset><white>- <gray>Required playtime',
+      loreDisplay: '<reset><gray>Playtime requirement'
+    },
+    tag: {
+      name: 'owns-tag',
+      type: 'tag',
+      tag: tags.find((item) => item.identifier !== tag.identifier)?.identifier || tag.identifier,
+      display: '<reset><white>- <gray>Own another tag first'
+    },
+    economy: {
+      name: 'balance',
+      type: 'economy',
+      economyType: tag.economy.type || 'VAULT',
+      amount: tag.economy.amount || 100,
+      display: '<reset><white>- <gray>Required balance'
+    }
+  };
+  return normalizeRequirement(presets[type] || presets.permission);
+}
+
 document.querySelectorAll('.nav-item').forEach((button) => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.nav-item').forEach((node) => node.classList.remove('active'));
@@ -857,39 +1029,82 @@ $('applyBulkButton').addEventListener('click', () => {
   render();
 });
 
-$('toggleBulkButton').addEventListener('click', () => $('bulkPanel').classList.toggle('active'));
-$('closeBulkButton').addEventListener('click', () => $('bulkPanel').classList.remove('active'));
-['bulkMatchCategory', 'bulkMatchRarity', 'bulkMatchText', 'bulkSetCategory', 'bulkSetRarity', 'bulkPermission', 'bulkAddGroup', 'bulkRemoveGroup', 'bulkSetCost', 'bulkEconomyState']
+$('toggleBulkButton').addEventListener('click', () => setBulkMode(!bulkMode));
+$('closeBulkButton').addEventListener('click', () => setBulkMode(false));
+$('selectVisibleButton').addEventListener('click', selectVisibleBulkTags);
+$('clearSelectionButton').addEventListener('click', () => {
+  selectedBulkTags.clear();
+  renderTagList();
+  renderBulkMatches();
+});
+['bulkSetCategory', 'bulkSetRarity', 'bulkPermission', 'bulkAddGroup', 'bulkRemoveGroup', 'bulkSetCost', 'bulkEconomyState']
   .forEach((id) => $(id).addEventListener('input', renderBulkMatches));
 
+document.querySelectorAll('[data-economy-preset]').forEach((button) => {
+  button.addEventListener('click', () => updateSelected((tag) => {
+    tag.economy.type = isExcellentEconomyType(button.dataset.economyPreset)
+      ? excellentEconomyType($('fieldExcellentEconomyId').value)
+      : button.dataset.economyPreset;
+    tag.economy.enabled = true;
+    if (!Number(tag.economy.amount)) tag.economy.amount = tag.economy.type === 'EXP_LEVEL' ? 10 : 100;
+    if (tag.economy.type === 'CUSTOM') {
+      tag.economy.takeCommand = tag.economy.takeCommand || 'eco take %player% %amount%';
+      tag.economy.condition = tag.economy.condition || '%vault_eco_balance% >= %amount%';
+    }
+  }));
+});
+
+document.querySelectorAll('[data-economy-amount]').forEach((button) => {
+  button.addEventListener('click', () => updateSelected((tag) => {
+    tag.economy.amount = Number(button.dataset.economyAmount || 0);
+    tag.economy.enabled = tag.economy.amount > 0;
+  }));
+});
+
+function setBulkMode(enabled) {
+  bulkMode = enabled;
+  $('bulkPanel').classList.toggle('active', bulkMode);
+  $('toggleBulkButton').classList.toggle('active', bulkMode);
+  if (!bulkMode) selectedBulkTags.clear();
+  renderTagList();
+  renderBulkMatches();
+}
+
+function visibleBulkIds() {
+  return ($('tagList').dataset.visibleIds || '').split('\n').filter(Boolean);
+}
+
+function selectVisibleBulkTags() {
+  visibleBulkIds().forEach((id) => selectedBulkTags.add(id));
+  renderTagList();
+  renderBulkMatches();
+}
+
+function toggleBulkTag(identifier) {
+  if (selectedBulkTags.has(identifier)) {
+    selectedBulkTags.delete(identifier);
+  } else {
+    selectedBulkTags.add(identifier);
+  }
+  renderTagList();
+  renderBulkMatches();
+}
+
 function getBulkMatches() {
-  const category = $('bulkMatchCategory').value;
-  const rarity = $('bulkMatchRarity').value;
-  const query = $('bulkMatchText').value.trim().toLowerCase();
-  return tags.filter((tag) => {
-    if (category && tag.category !== category) return false;
-    if (rarity && tag.rarity !== rarity) return false;
-    if (!query) return true;
-    return [
-      tag.identifier,
-      tag.permission,
-      tag.category,
-      tag.rarity,
-      tag.tag.join(' '),
-      tag.description.join(' '),
-      tag.groups.join(' '),
-      tag.abilities.join(' '),
-      Object.entries(tag.customPlaceholders).map(([key, value]) => `${key} ${value}`).join(' ')
-    ].join(' ').toLowerCase().includes(query);
-  });
+  const selected = new Set(selectedBulkTags);
+  return tags.filter((tag) => selected.has(tag.identifier));
 }
 
 function renderBulkMatches() {
   const matches = getBulkMatches();
-  $('bulkSummary').textContent = matches.length === 1 ? '1 tag matched' : `${matches.length} tags matched`;
+  $('bulkSummary').textContent = matches.length === 1 ? '1 tag selected' : `${matches.length} tags selected`;
+  $('bulkSelectionHint').textContent = matches.length
+    ? 'Bulk changes will only affect the selected tags.'
+    : 'Use the checkboxes in the tag list.';
+  $('applyBulkButton').disabled = matches.length === 0;
   $('bulkMatches').innerHTML = matches.length
     ? matches.slice(0, 24).map((tag) => `<span>${escapeHtml(tag.identifier)}</span>`).join('') + (matches.length > 24 ? `<span>+${matches.length - 24} more</span>` : '')
-    : '<p>No tags match the current filters.</p>';
+    : '<p>No tags selected.</p>';
 }
 
 function renderPayload() {
@@ -962,18 +1177,37 @@ function compareVersions(current, latest) {
   return 0;
 }
 
-$('applyChangesButton').addEventListener('click', async () => {
+$('applyChangesButton').addEventListener('click', () => {
   syncSelectedFromForm();
-  const originalApplyText = $('applyChangesButton').innerHTML;
-  $('applyChangesButton').disabled = true;
-  $('applyChangesButton').innerHTML = `${icons.download} Saving...`;
   if (!sessionLoaded) {
-    $('applyChangesButton').disabled = false;
-    $('applyChangesButton').innerHTML = originalApplyText;
     showApplyModal('/tags editor web', 'This page is not connected to a web session. Create a new session from your server first.');
     return;
   }
+  showCompareModal();
+});
 
+$('cancelCompareButton').addEventListener('click', closeCompareModal);
+$('confirmCompareButton').addEventListener('click', saveEditorSession);
+
+function showCompareModal() {
+  const changes = buildChangeSummary();
+  $('compareList').innerHTML = changes.length
+    ? changes.map((change) => `<div class="compare-row ${change.type}"><strong>${escapeHtml(change.title)}</strong><span>${escapeHtml(change.detail)}</span></div>`).join('')
+    : '<div class="compare-row unchanged"><strong>No tag changes detected</strong><span>The exported payload still includes current categories, rarities, and plugin metadata.</span></div>';
+  $('compareModal').classList.add('active');
+  $('compareModal').setAttribute('aria-hidden', 'false');
+}
+
+function closeCompareModal() {
+  $('compareModal').classList.remove('active');
+  $('compareModal').setAttribute('aria-hidden', 'true');
+}
+
+async function saveEditorSession() {
+  closeCompareModal();
+  const originalApplyText = $('applyChangesButton').innerHTML;
+  $('applyChangesButton').disabled = true;
+  $('applyChangesButton').innerHTML = `${icons.download} Saving...`;
   try {
     await activeSession.save(currentPayload());
     updateSessionState();
@@ -990,7 +1224,56 @@ $('applyChangesButton').addEventListener('click', async () => {
     $('applyChangesButton').disabled = sessionUnavailable;
     $('applyChangesButton').innerHTML = originalApplyText;
   }
-});
+}
+
+function buildChangeSummary() {
+  const changes = [];
+  const originalById = new Map(originalTagSnapshots);
+  const seenOriginal = new Set();
+
+  tags.forEach((tag) => {
+    const originalId = tag.__originalIdentifier || tag.identifier;
+    const original = originalById.get(originalId);
+    if (!original) {
+      changes.push({ type: 'added', title: `Added ${tag.identifier}`, detail: `${tag.category} · ${tag.rarity}` });
+      return;
+    }
+    seenOriginal.add(originalId);
+    const tagChanges = diffTag(original, tag);
+    if (original.identifier !== tag.identifier) {
+      tagChanges.unshift(`identifier ${original.identifier} → ${tag.identifier}`);
+    }
+    if (tagChanges.length) {
+      changes.push({ type: 'changed', title: `Changed ${tag.identifier}`, detail: tagChanges.slice(0, 5).join(', ') + (tagChanges.length > 5 ? `, +${tagChanges.length - 5} more` : '') });
+    }
+  });
+
+  originalById.forEach((original, id) => {
+    if (!seenOriginal.has(id)) {
+      changes.push({ type: 'deleted', title: `Deleted ${original.identifier}`, detail: `${original.category} · ${original.rarity}` });
+    }
+  });
+
+  return changes;
+}
+
+function diffTag(original, current) {
+  const checks = [
+    ['tag frames', original.tag, current.tag],
+    ['permission', original.permission, current.permission],
+    ['category', original.category, current.category],
+    ['rarity', original.rarity, current.rarity],
+    ['order', original.order, current.order],
+    ['economy', original.economy, current.economy],
+    ['display item', original.displayItem, current.displayItem],
+    ['voucher', original.voucher, current.voucher],
+    ['variants', original.variants, current.variants],
+    ['requirements', original.requirements, current.requirements]
+  ];
+  return checks
+    .filter(([, left, right]) => JSON.stringify(left) !== JSON.stringify(right))
+    .map(([label]) => label);
+}
 
 renderColorStops();
 $('colorText').addEventListener('input', () => {
@@ -1831,7 +2114,9 @@ function syncSelectedFromForm() {
   tag.displayName = $('fieldDisplayName').value;
   tag.displayItem = $('fieldDisplayItem').value;
   tag.customModelData = Number($('fieldModelData').value || 0);
-  tag.economy.type = $('fieldEconomyType').value;
+  tag.economy.type = isExcellentEconomyType($('fieldEconomyType').value)
+    ? excellentEconomyType($('fieldExcellentEconomyId').value)
+    : $('fieldEconomyType').value;
   tag.economy.takeCommand = $('fieldTakeCommand').value;
   tag.economy.condition = $('fieldCondition').value;
   tag.voucher.material = $('fieldVoucherMaterial').value;
